@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  MANAGER
+  DOCTOR
+  PATIENT
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkId     String   @unique
+  orgId       String
+  role        Role
+  email       String   @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patientProfile Patient?      @relation("PatientUser")
+  notes          DoctorNote[]
+  internalNotes  InternalNote[]
+  measurements   MeasurementEntry[]
+  audits         AuditEvent[]
+
+  @@index([orgId, role])
+}
+
+model Patient {
+  id                String   @id @default(cuid())
+  orgId             String
+  userId            String?  @unique
+  firstName         String
+  lastName          String
+  dob               DateTime?
+  sex               Sex      @default(UNDISCLOSED)
+  phone             String?
+  nutritionGoal     String?
+  clinicalSummary   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User? @relation("PatientUser", fields: [userId], references: [id], onDelete: SetNull)
+  appointments      Appointment[]
+  measurementEntries MeasurementEntry[]
+  uploadedAssets    UploadedAsset[]
+  doctorNotes       DoctorNote[]
+  internalNotes     InternalNote[]
+
+  @@index([orgId])
+}
+
+model Appointment {
+  id          String   @id @default(cuid())
+  orgId       String
+  patientId   String
+  scheduledAt DateTime
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patient     Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  metrics     AppointmentMetric[]
+  notes       DoctorNote[]
+  assets      UploadedAsset[]
+  measurements MeasurementEntry[]
+
+  @@index([orgId, patientId, scheduledAt])
+}
+
+model AppointmentMetric {
+  id            String   @id @default(cuid())
+  appointmentId String
+  key           String
+  value         String
+  unit          String?
+  createdAt     DateTime @default(now())
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId])
+}
+
+model DoctorNote {
+  id            String   @id @default(cuid())
+  orgId         String
+  patientId     String
+  appointmentId String?
+  authorId      String
+  content       String
+  revision      Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, patientId, createdAt])
+}
+
+model InternalNote {
+  id        String   @id @default(cuid())
+  orgId     String
+  patientId String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, patientId, createdAt])
+}
+
+model MeasurementEntry {
+  id             String   @id @default(cuid())
+  orgId          String
+  patientId      String
+  appointmentId  String?
+  recorderUserId String
+  source         String
+  measuredAt     DateTime
+  weightKg       Decimal? @db.Decimal(6, 2)
+  bodyFatPct     Decimal? @db.Decimal(5, 2)
+  waistCm        Decimal? @db.Decimal(6, 2)
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  recorderUser User    @relation(fields: [recorderUserId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, patientId, measuredAt])
+  @@index([appointmentId])
+}
+
+model UploadedAsset {
+  id            String   @id @default(cuid())
+  orgId         String
+  patientId     String
+  appointmentId String?
+  uploadedById  String
+  kind          String
+  fileKey       String   @unique
+  fileName      String
+  fileUrl       String
+  fileSize      Int
+  createdAt     DateTime @default(now())
+
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, patientId, kind])
+}
+
+model AuditEvent {
+  id         String   @id @default(cuid())
+  orgId      String
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  beforeJson Json?
+  afterJson  Json?
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, entityType, entityId, createdAt])
+}
