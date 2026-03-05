@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { Role } from "@prisma/client";
+import { Role, AppointmentStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { getSessionActor } from "@/lib/authz";
@@ -20,6 +20,13 @@ import {
 
 const signInRoute = "/sign-in" as Route;
 
+function appointmentStatusBadge(status: AppointmentStatus) {
+  if (status === AppointmentStatus.COMPLETED) return <Badge>Completed</Badge>;
+  if (status === AppointmentStatus.CANCELLED)
+    return <Badge className="border-red-300 bg-red-100 text-red-700">Cancelled</Badge>;
+  return <Badge variant="secondary">Booked</Badge>;
+}
+
 export default async function DashboardPage() {
   const { userId } = await auth();
 
@@ -33,19 +40,26 @@ export default async function DashboardPage() {
       redirect("/me");
     }
 
+    const appointmentWhere =
+      actor.role === Role.DOCTOR
+        ? { orgId: actor.orgId, doctorId: actor.id }
+        : { orgId: actor.orgId };
+
     const [patients, totalAppointments, completedAppointments, recentAppointments] =
       await Promise.all([
         listPatients(actor),
-        db.appointment.count({ where: { orgId: actor.orgId } }),
+        db.appointment.count({ where: appointmentWhere }),
         db.appointment.count({
-          where: {
-            orgId: actor.orgId,
-            completedAt: { not: null },
-          },
+          where: { ...appointmentWhere, status: AppointmentStatus.COMPLETED },
         }),
         db.appointment.findMany({
-          where: { orgId: actor.orgId },
-          include: { patient: true },
+          where: appointmentWhere,
+          include: {
+            participants: {
+              include: { patient: true },
+              take: 1,
+            },
+          },
           orderBy: { scheduledAt: "desc" },
           take: 6,
         }),
@@ -71,8 +85,31 @@ export default async function DashboardPage() {
                 <a href="/patients">Patients</a>
               </Button>
               <Button asChild variant="ghost" className="justify-start">
-                <a href="/trends">Trends</a>
+                <a href="/appointments">Appointments</a>
               </Button>
+              <Button asChild variant="ghost" className="justify-start">
+                <a href="/stats">Stats</a>
+              </Button>
+              {actor.role === Role.DOCTOR && (
+                <>
+                  <Button asChild variant="ghost" className="justify-start">
+                    <a href="/availability">Availability</a>
+                  </Button>
+                  <Button asChild variant="ghost" className="justify-start">
+                    <a href="/metric-types">Metric types</a>
+                  </Button>
+                </>
+              )}
+              {actor.role === Role.MANAGER && (
+                <>
+                  <Button asChild variant="ghost" className="justify-start">
+                    <a href="/nutrition-plans">Nutrition plans</a>
+                  </Button>
+                  <Button asChild variant="ghost" className="justify-start">
+                    <a href="/metric-types">Metric types</a>
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -125,23 +162,25 @@ export default async function DashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recentAppointments.map((appointment) => (
-                      <TableRow key={appointment.id}>
-                        <TableCell>
-                          {appointment.patient.firstName} {appointment.patient.lastName}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(appointment.scheduledAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {appointment.completedAt ? (
-                            <Badge>Completed</Badge>
-                          ) : (
-                            <Badge variant="outline">Scheduled</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {recentAppointments.map((appointment) => {
+                      const first = appointment.participants[0]?.patient;
+                      return (
+                        <TableRow key={appointment.id}>
+                          <TableCell>
+                            {first ? `${first.firstName} ${first.lastName}` : "—"}
+                            {appointment.participants.length > 1
+                              ? ` +${appointment.participants.length - 1}`
+                              : ""}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(appointment.scheduledAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {appointmentStatusBadge(appointment.status)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
                 <Separator className="my-4" />

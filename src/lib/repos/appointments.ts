@@ -1,20 +1,32 @@
-import { Role } from "@prisma/client";
+import { Role, AppointmentStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { assertRole, type SessionActor } from "@/lib/authz";
 import { recordAuditEvent } from "@/lib/audit";
 
+const participantInclude = {
+  participants: {
+    include: { patient: true },
+  },
+};
+
 export async function getAppointment(actor: SessionActor, appointmentId: string) {
   if (actor.role === Role.PATIENT) {
-    if (!actor.patientId) {
-      throw new Error("Forbidden");
-    }
+    if (!actor.patientId) throw new Error("Forbidden");
 
     return db.appointment.findFirst({
-      where: { id: appointmentId, orgId: actor.orgId, patientId: actor.patientId },
+      where: {
+        id: appointmentId,
+        orgId: actor.orgId,
+        participants: { some: { patientId: actor.patientId } },
+      },
       include: {
-        patient: true,
-        metrics: true,
-        notes: { orderBy: { createdAt: "desc" } },
+        ...participantInclude,
+        doctor: { select: { id: true, displayName: true } },
+        metrics: { include: { metricType: true, patient: true } },
+        notes: {
+          where: { isPublic: true },
+          orderBy: { createdAt: "desc" },
+        },
         assets: { orderBy: { createdAt: "desc" } },
       },
     });
@@ -25,20 +37,46 @@ export async function getAppointment(actor: SessionActor, appointmentId: string)
   return db.appointment.findFirst({
     where: { id: appointmentId, orgId: actor.orgId },
     include: {
-      patient: true,
-      metrics: true,
+      ...participantInclude,
+      doctor: { select: { id: true, displayName: true } },
+      metrics: { include: { metricType: true, patient: true } },
       notes: { orderBy: { createdAt: "desc" } },
       assets: { orderBy: { createdAt: "desc" } },
     },
   });
 }
 
-export async function listAppointments(actor: SessionActor) {
+export async function listAppointments(actor: SessionActor, doctorId?: string) {
+  if (actor.role === Role.PATIENT) {
+    if (!actor.patientId) throw new Error("Forbidden");
+
+    return db.appointment.findMany({
+      where: {
+        orgId: actor.orgId,
+        participants: { some: { patientId: actor.patientId } },
+      },
+      include: {
+        ...participantInclude,
+        doctor: { select: { id: true, displayName: true } },
+      },
+      orderBy: { scheduledAt: "desc" },
+      take: 100,
+    });
+  }
+
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
+  const where =
+    actor.role === Role.DOCTOR
+      ? { orgId: actor.orgId, doctorId: actor.id }
+      : { orgId: actor.orgId, ...(doctorId ? { doctorId } : {}) };
+
   return db.appointment.findMany({
-    where: { orgId: actor.orgId },
-    include: { patient: true },
+    where,
+    include: {
+      ...participantInclude,
+      doctor: { select: { id: true, displayName: true } },
+    },
     orderBy: { scheduledAt: "desc" },
     take: 100,
   });
@@ -46,24 +84,30 @@ export async function listAppointments(actor: SessionActor) {
 
 export async function createAppointment(
   actor: SessionActor,
-  input: { patientId: string; scheduledAt: Date },
+  input: { patientIds: string[]; doctorId: string; scheduledAt: Date },
 ) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
-  const patient = await db.patient.findFirst({
-    where: { id: input.patientId, orgId: actor.orgId },
+  if (input.patientIds.length === 0) throw new Error("At least one patient required");
+
+  const patients = await db.patient.findMany({
+    where: { id: { in: input.patientIds }, orgId: actor.orgId },
   });
 
-  if (!patient) {
-    throw new Error("Patient not found");
+  if (patients.length !== input.patientIds.length) {
+    throw new Error("One or more patients not found");
   }
 
   const appointment = await db.appointment.create({
     data: {
       orgId: actor.orgId,
-      patientId: input.patientId,
+      doctorId: input.doctorId,
       scheduledAt: input.scheduledAt,
+      participants: {
+        create: input.patientIds.map((patientId) => ({ patientId })),
+      },
     },
+    include: participantInclude,
   });
 
   await recordAuditEvent({
@@ -78,43 +122,71 @@ export async function createAppointment(
   return appointment;
 }
 
-export async function addAppointmentNote(
+export async function updateAppointmentStatus(
   actor: SessionActor,
-  input: {
-    patientId: string;
-    appointmentId: string;
-    content: string;
-  },
+  appointmentId: string,
+  status: AppointmentStatus,
 ) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
+
+  const before = await db.appointment.findFirst({
+    where: { id: appointmentId, orgId: actor.orgId },
+  });
+  if (!before) throw new Error("Appointment not found");
+
+  const completedAt =
+    status === AppointmentStatus.COMPLETED ? (before.completedAt ?? new Date()) : null;
+
+  const after = await db.appointment.update({
+    where: { id: appointmentId },
+    data: { status, completedAt },
+  });
+
+  await recordAuditEvent({
+    orgId: actor.orgId,
+    actorId: actor.id,
+    action: "appointment.status_update",
+    entityType: "appointment",
+    entityId: appointmentId,
+    beforeJson: before,
+    afterJson: after,
+  });
+
+  return after;
+}
+
+export async function addAppointmentNote(
+  actor: SessionActor,
+  input: { patientId: string; appointmentId: string; content: string; isPublic: boolean },
+) {
+  assertRole(actor, [Role.DOCTOR]);
 
   const appointment = await db.appointment.findFirst({
     where: {
       id: input.appointmentId,
       orgId: actor.orgId,
-      patientId: input.patientId,
+      participants: { some: { patientId: input.patientId } },
     },
   });
 
-  if (!appointment) {
-    throw new Error("Appointment not found for this patient");
-  }
+  if (!appointment) throw new Error("Appointment not found for this patient");
 
-  const note = await db.doctorNote.create({
+  const note = await db.note.create({
     data: {
       orgId: actor.orgId,
       patientId: input.patientId,
       appointmentId: input.appointmentId,
       authorId: actor.id,
       content: input.content,
+      isPublic: input.isPublic,
     },
   });
 
   await recordAuditEvent({
     orgId: actor.orgId,
     actorId: actor.id,
-    action: "doctor_note.create",
-    entityType: "doctor_note",
+    action: "note.create",
+    entityType: "note",
     entityId: note.id,
     afterJson: note,
   });
@@ -122,34 +194,58 @@ export async function addAppointmentNote(
   return note;
 }
 
+export async function updateNoteVisibility(
+  actor: SessionActor,
+  noteId: string,
+  isPublic: boolean,
+) {
+  assertRole(actor, [Role.DOCTOR]);
+
+  const note = await db.note.findFirst({
+    where: { id: noteId, orgId: actor.orgId, authorId: actor.id },
+  });
+  if (!note) throw new Error("Note not found");
+
+  const updated = await db.note.update({
+    where: { id: noteId },
+    data: { isPublic },
+  });
+
+  await recordAuditEvent({
+    orgId: actor.orgId,
+    actorId: actor.id,
+    action: "note.visibility_update",
+    entityType: "note",
+    entityId: noteId,
+    beforeJson: note,
+    afterJson: updated,
+  });
+
+  return updated;
+}
+
 export async function addAppointmentMetrics(
   actor: SessionActor,
   input: {
     appointmentId: string;
-    metrics: Array<{ key: string; value: string; unit?: string }>;
+    metrics: Array<{ patientId: string; metricTypeId: string; value: string }>;
   },
 ) {
-  assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
+  assertRole(actor, [Role.DOCTOR]);
 
   const appointment = await db.appointment.findFirst({
-    where: {
-      id: input.appointmentId,
-      orgId: actor.orgId,
-    },
+    where: { id: input.appointmentId, orgId: actor.orgId },
   });
-
-  if (!appointment) {
-    throw new Error("Appointment not found");
-  }
+  if (!appointment) throw new Error("Appointment not found");
 
   const created = await db.$transaction(
-    input.metrics.map((metric) =>
+    input.metrics.map((m) =>
       db.appointmentMetric.create({
         data: {
           appointmentId: input.appointmentId,
-          key: metric.key,
-          value: metric.value,
-          unit: metric.unit,
+          patientId: m.patientId,
+          metricTypeId: m.metricTypeId,
+          value: m.value,
         },
       }),
     ),

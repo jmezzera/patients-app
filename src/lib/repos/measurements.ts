@@ -7,10 +7,8 @@ export async function listMeasurements(actor: SessionActor, patientId: string) {
   assertPatientScope(actor, patientId);
 
   return db.measurementEntry.findMany({
-    where: {
-      orgId: actor.orgId,
-      patientId,
-    },
+    where: { orgId: actor.orgId, patientId },
+    include: { metricType: true, recorderUser: { select: { displayName: true } } },
     orderBy: { measuredAt: "desc" },
     take: 200,
   });
@@ -21,15 +19,20 @@ export async function createMeasurement(
   input: {
     patientId: string;
     appointmentId?: string;
+    metricTypeId: string;
     measuredAt: Date;
-    weightKg?: number;
-    bodyFatPct?: number;
-    waistCm?: number;
+    value: number;
     notes?: string;
   },
 ) {
   if (actor.role === Role.PATIENT) {
     assertPatientScope(actor, input.patientId);
+
+    const metricType = await db.metricType.findFirst({
+      where: { id: input.metricTypeId, orgId: actor.orgId },
+    });
+    if (!metricType) throw new Error("Metric type not found");
+    if (metricType.doctorOnly) throw new Error("This metric can only be recorded by a doctor");
   }
 
   if (input.appointmentId) {
@@ -37,13 +40,10 @@ export async function createMeasurement(
       where: {
         id: input.appointmentId,
         orgId: actor.orgId,
-        patientId: input.patientId,
+        participants: { some: { patientId: input.patientId } },
       },
     });
-
-    if (!appointment) {
-      throw new Error("Appointment not found for measurement");
-    }
+    if (!appointment) throw new Error("Appointment not found for measurement");
   }
 
   const created = await db.measurementEntry.create({
@@ -51,22 +51,13 @@ export async function createMeasurement(
       orgId: actor.orgId,
       source: actor.role === Role.PATIENT ? "patient_self" : "doctor_visit",
       measuredAt: input.measuredAt,
-      weightKg: input.weightKg,
-      bodyFatPct: input.bodyFatPct,
-      waistCm: input.waistCm,
+      value: input.value,
       notes: input.notes,
-      patient: {
-        connect: { id: input.patientId },
-      },
-      recorderUser: {
-        connect: { id: actor.id },
-      },
+      patient: { connect: { id: input.patientId } },
+      recorderUser: { connect: { id: actor.id } },
+      metricType: { connect: { id: input.metricTypeId } },
       ...(input.appointmentId
-        ? {
-            appointment: {
-              connect: { id: input.appointmentId },
-            },
-          }
+        ? { appointment: { connect: { id: input.appointmentId } } }
         : {}),
     },
   });

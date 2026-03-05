@@ -4,9 +4,9 @@ import { getSessionActor } from "@/lib/authz";
 import { addAppointmentMetrics } from "@/lib/repos/appointments";
 
 const metricSchema = z.object({
-  key: z.string().min(1),
+  patientId: z.string().min(1),
+  metricTypeId: z.string().min(1),
   value: z.string().min(1),
-  unit: z.string().optional(),
 });
 
 const payloadSchema = z.object({

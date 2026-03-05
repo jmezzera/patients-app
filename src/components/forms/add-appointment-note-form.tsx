@@ -11,6 +11,7 @@ type Props = {
 
 export function AddAppointmentNoteForm({ appointmentId, patientId }: Props) {
   const [content, setContent] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
 
   return (
@@ -22,7 +23,7 @@ export function AddAppointmentNoteForm({ appointmentId, patientId }: Props) {
         await fetch(`/api/appointments/${appointmentId}/notes`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ patientId, content }),
+          body: JSON.stringify({ patientId, content, isPublic }),
         });
         setContent("");
         setSaving(false);
@@ -30,11 +31,19 @@ export function AddAppointmentNoteForm({ appointmentId, patientId }: Props) {
     >
       <Textarea
         value={content}
-        onChange={(event) => setContent(event.target.value)}
-        placeholder="Add post-appointment note"
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Add appointment note…"
       />
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={isPublic}
+          onChange={(e) => setIsPublic(e.target.checked)}
+        />
+        Visible to patient
+      </label>
       <Button disabled={saving || !content.trim()} variant="outline">
-        {saving ? "Saving..." : "Save note"}
+        {saving ? "Saving…" : "Save note"}
       </Button>
     </form>
   );

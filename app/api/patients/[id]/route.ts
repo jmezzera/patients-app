@@ -4,9 +4,10 @@ import { getSessionActor } from "@/lib/authz";
 import { updatePatientProfile } from "@/lib/repos/patients";
 
 const schema = z.object({
-  nutritionGoal: z.string().optional(),
+  nutritionPlanId: z.string().nullable().optional(),
   clinicalSummary: z.string().optional(),
   phone: z.string().optional(),
+  assignedDoctorId: z.string().nullable().optional(),
 });
 
 type Props = { params: Promise<{ id: string }> };

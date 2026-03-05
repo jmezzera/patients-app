@@ -20,11 +20,6 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     role = localUser?.role ?? null;
   }
 
-  console.log(userId, role)
-
-
-  // TODO: role is null if the user is not authenicated - we should clean that up
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b bg-white/75 backdrop-blur">
@@ -35,17 +30,40 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <nav className="flex items-center gap-4 text-sm text-muted-foreground">
             {userId ? (
               <>
-                <Link href="/dashboard" className="hover:text-foreground">
-                  Dashboard
-                </Link>
                 {role !== Role.PATIENT ? (
                   <>
+                    <Link href="/dashboard" className="hover:text-foreground">
+                      Dashboard
+                    </Link>
                     <Link href="/patients" className="hover:text-foreground">
                       Patients
                     </Link>
                     <Link href="/appointments" className="hover:text-foreground">
                       Appointments
                     </Link>
+                    <a href="/stats" className="hover:text-foreground">
+                      Stats
+                    </a>
+                    {role === Role.DOCTOR && (
+                      <>
+                        <a href="/availability" className="hover:text-foreground">
+                          Availability
+                        </a>
+                        <a href="/metric-types" className="hover:text-foreground">
+                          Metrics
+                        </a>
+                      </>
+                    )}
+                    {role === Role.MANAGER && (
+                      <>
+                        <a href="/nutrition-plans" className="hover:text-foreground">
+                          Nutrition plans
+                        </a>
+                        <a href="/metric-types" className="hover:text-foreground">
+                          Metrics
+                        </a>
+                      </>
+                    )}
                   </>
                 ) : null}
                 {role === Role.PATIENT ? (
@@ -68,7 +86,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href={signInRoute} className="hover:text-foreground">
                   Sign in
                 </Link>
-                <Link href={signUpRoute} className="rounded-md border px-3 py-1.5 text-foreground hover:bg-muted">
+                <Link
+                  href={signUpRoute}
+                  className="rounded-md border px-3 py-1.5 text-foreground hover:bg-muted"
+                >
                   Create account
                 </Link>
               </>

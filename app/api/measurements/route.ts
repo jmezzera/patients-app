@@ -3,34 +3,32 @@ import { z } from "zod";
 import { getSessionActor } from "@/lib/authz";
 import { createMeasurement } from "@/lib/repos/measurements";
 
-const payloadSchema = z.object({
-  measuredAt: z.string().min(1),
-  weightKg: z.number().optional(),
-  bodyFatPct: z.number().optional(),
-  waistCm: z.number().optional(),
-  notes: z.string().optional(),
+const schema = z.object({
   patientId: z.string().optional(),
+  metricTypeId: z.string().min(1),
+  measuredAt: z.string().min(1),
+  value: z.number(),
+  notes: z.string().optional(),
+  appointmentId: z.string().optional(),
 });
 
 export async function POST(request: Request) {
   try {
     const actor = await getSessionActor();
-    const body = await request.json();
-    const parsed = payloadSchema.parse(body);
+    const body = schema.parse(await request.json());
 
-    const patientId = parsed.patientId ?? actor.patientId;
-
+    const patientId = body.patientId ?? actor.patientId;
     if (!patientId) {
       return NextResponse.json({ error: "No patient scope" }, { status: 400 });
     }
 
     const measurement = await createMeasurement(actor, {
       patientId,
-      measuredAt: new Date(parsed.measuredAt),
-      weightKg: parsed.weightKg,
-      bodyFatPct: parsed.bodyFatPct,
-      waistCm: parsed.waistCm,
-      notes: parsed.notes,
+      metricTypeId: body.metricTypeId,
+      measuredAt: new Date(body.measuredAt),
+      value: body.value,
+      notes: body.notes,
+      appointmentId: body.appointmentId,
     });
 
     return NextResponse.json({ measurement }, { status: 201 });

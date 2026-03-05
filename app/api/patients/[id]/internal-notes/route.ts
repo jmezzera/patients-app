@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionActor } from "@/lib/authz";
-import { addInternalNote } from "@/lib/repos/internal-notes";
+import { addPatientNote } from "@/lib/repos/patients";
 
 const schema = z.object({
   content: z.string().min(1),
+  isPublic: z.boolean().default(false),
 });
 
 type Props = { params: Promise<{ id: string }> };
@@ -15,9 +16,10 @@ export async function POST(request: Request, { params }: Props) {
     const { id } = await params;
     const body = schema.parse(await request.json());
 
-    const note = await addInternalNote(actor, {
+    const note = await addPatientNote(actor, {
       patientId: id,
       content: body.content,
+      isPublic: body.isPublic,
     });
 
     return NextResponse.json({ note }, { status: 201 });

@@ -4,7 +4,8 @@ import { getSessionActor } from "@/lib/authz";
 import { createAppointment } from "@/lib/repos/appointments";
 
 const schema = z.object({
-  patientId: z.string().min(1),
+  patientIds: z.array(z.string().min(1)).min(1),
+  doctorId: z.string().min(1),
   scheduledAt: z.string().min(1),
 });
 
@@ -14,7 +15,8 @@ export async function POST(request: Request) {
     const body = schema.parse(await request.json());
 
     const appointment = await createAppointment(actor, {
-      patientId: body.patientId,
+      patientIds: body.patientIds,
+      doctorId: body.doctorId,
       scheduledAt: new Date(body.scheduledAt),
     });
 

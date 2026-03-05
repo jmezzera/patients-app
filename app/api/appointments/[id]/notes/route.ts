@@ -6,6 +6,7 @@ import { addAppointmentNote } from "@/lib/repos/appointments";
 const schema = z.object({
   patientId: z.string().min(1),
   content: z.string().min(1),
+  isPublic: z.boolean().default(true),
 });
 
 type Props = { params: Promise<{ id: string }> };
@@ -20,6 +21,7 @@ export async function POST(request: Request, { params }: Props) {
       appointmentId: id,
       patientId: body.patientId,
       content: body.content,
+      isPublic: body.isPublic,
     });
 
     return NextResponse.json({ note }, { status: 201 });

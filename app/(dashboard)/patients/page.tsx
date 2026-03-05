@@ -1,10 +1,23 @@
 import Link from "next/link";
+import { Role } from "@prisma/client";
 import { getSessionActor } from "@/lib/authz";
 import { listPatients } from "@/lib/repos/patients";
+import { listNutritionPlans } from "@/lib/repos/nutrition-plans";
+import { db } from "@/lib/db";
+import { CreatePatientForm } from "@/components/forms/create-patient-form";
 
 export default async function PatientsPage() {
   const actor = await getSessionActor();
-  const patients = await listPatients(actor);
+
+  const [patients, nutritionPlans, doctors] = await Promise.all([
+    listPatients(actor),
+    listNutritionPlans(actor),
+    db.user.findMany({
+      where: { orgId: actor.orgId, role: Role.DOCTOR },
+      select: { id: true, displayName: true },
+      orderBy: { displayName: "asc" },
+    }),
+  ]);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
@@ -15,6 +28,7 @@ export default async function PatientsPage() {
             {patients.length} active profiles in your clinic workspace.
           </p>
         </div>
+        <CreatePatientForm doctors={doctors} nutritionPlans={nutritionPlans} />
       </div>
       <ul className="grid gap-3 sm:grid-cols-2">
         {patients.map((patient) => (
@@ -22,7 +36,10 @@ export default async function PatientsPage() {
             <Link className="text-base font-medium hover:underline" href={`/patients/${patient.id}`}>
               {patient.firstName} {patient.lastName}
             </Link>
-            <p className="mt-1 text-sm text-muted-foreground">Open chart and trends</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {patient.assignedDoctor?.displayName ?? "No doctor assigned"}
+              {patient.nutritionPlan ? ` · ${patient.nutritionPlan.name}` : ""}
+            </p>
           </li>
         ))}
       </ul>

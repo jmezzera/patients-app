@@ -38,7 +38,7 @@ export const ourFileRouter = {
           where: {
             id: input.appointmentId,
             orgId: actor.orgId,
-            patientId: input.patientId,
+            participants: { some: { patientId: input.patientId } },
           },
         });
 

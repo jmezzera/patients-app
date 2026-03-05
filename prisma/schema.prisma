@@ -21,6 +21,45 @@ enum Sex {
   UNDISCLOSED
 }
 
+enum AppointmentStatus {
+  BOOKED
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Reference data ────────────────────────────────────────────────────────────
+
+model NutritionPlan {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  createdBy String
+  createdAt DateTime @default(now())
+
+  patients Patient[]
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+model MetricType {
+  id         String   @id @default(cuid())
+  orgId      String
+  name       String
+  unit       String?
+  doctorOnly Boolean  @default(false)
+  createdBy  String
+  createdAt  DateTime @default(now())
+
+  appointmentMetrics AppointmentMetric[]
+  measurements       MeasurementEntry[]
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+// ─── Users & patients ──────────────────────────────────────────────────────────
+
 model User {
   id          String   @id @default(cuid())
   clerkId     String   @unique
@@ -31,77 +70,106 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  patientProfile Patient?      @relation("PatientUser")
-  notes          DoctorNote[]
-  internalNotes  InternalNote[]
-  measurements   MeasurementEntry[]
-  audits         AuditEvent[]
+  patientProfile   Patient?        @relation("PatientUser")
+  assignedPatients Patient[]       @relation("AssignedDoctor")
+  appointments     Appointment[]   @relation("AppointmentDoctor")
+  notes            Note[]
+  measurements     MeasurementEntry[]
+  workingHours     WorkingHours[]
+  calendarBlocks   CalendarBlock[]
+  audits           AuditEvent[]
 
   @@index([orgId, role])
 }
 
 model Patient {
-  id                String   @id @default(cuid())
-  orgId             String
-  userId            String?  @unique
-  firstName         String
-  lastName          String
-  dob               DateTime?
-  sex               Sex      @default(UNDISCLOSED)
-  phone             String?
-  nutritionGoal     String?
-  clinicalSummary   String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String    @id @default(cuid())
+  orgId            String
+  userId           String?   @unique
+  assignedDoctorId String?
+  firstName        String
+  lastName         String
+  dob              DateTime?
+  sex              Sex       @default(UNDISCLOSED)
+  phone            String?
+  nutritionPlanId  String?
+  clinicalSummary  String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  user              User? @relation("PatientUser", fields: [userId], references: [id], onDelete: SetNull)
-  appointments      Appointment[]
-  measurementEntries MeasurementEntry[]
-  uploadedAssets    UploadedAsset[]
-  doctorNotes       DoctorNote[]
-  internalNotes     InternalNote[]
+  user           User?          @relation("PatientUser", fields: [userId], references: [id], onDelete: SetNull)
+  assignedDoctor User?          @relation("AssignedDoctor", fields: [assignedDoctorId], references: [id], onDelete: SetNull)
+  nutritionPlan  NutritionPlan? @relation(fields: [nutritionPlanId], references: [id], onDelete: SetNull)
+
+  appointmentParticipants AppointmentParticipant[]
+  measurementEntries      MeasurementEntry[]
+  uploadedAssets          UploadedAsset[]
+  notes                   Note[]
+  appointmentMetrics      AppointmentMetric[]
 
   @@index([orgId])
+  @@index([assignedDoctorId])
 }
 
+// ─── Appointments ──────────────────────────────────────────────────────────────
+
 model Appointment {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   orgId       String
-  patientId   String
+  doctorId    String
+  status      AppointmentStatus @default(BOOKED)
   scheduledAt DateTime
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  patient     Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  metrics     AppointmentMetric[]
-  notes       DoctorNote[]
-  assets      UploadedAsset[]
+  doctor       User                     @relation("AppointmentDoctor", fields: [doctorId], references: [id], onDelete: Restrict)
+  participants AppointmentParticipant[]
+  metrics      AppointmentMetric[]
+  notes        Note[]
+  assets       UploadedAsset[]
   measurements MeasurementEntry[]
 
-  @@index([orgId, patientId, scheduledAt])
+  @@index([orgId, doctorId, scheduledAt])
+  @@index([orgId, status, scheduledAt])
+}
+
+model AppointmentParticipant {
+  appointmentId String
+  patientId     String
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient     Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@id([appointmentId, patientId])
+  @@index([patientId])
 }
 
 model AppointmentMetric {
   id            String   @id @default(cuid())
   appointmentId String
-  key           String
+  patientId     String
+  metricTypeId  String
   value         String
-  unit          String?
   createdAt     DateTime @default(now())
 
   appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient     Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  metricType  MetricType  @relation(fields: [metricTypeId], references: [id], onDelete: Restrict)
 
-  @@index([appointmentId])
+  @@index([appointmentId, patientId])
 }
 
-model DoctorNote {
+// ─── Notes ─────────────────────────────────────────────────────────────────────
+
+model Note {
   id            String   @id @default(cuid())
   orgId         String
   patientId     String
   appointmentId String?
   authorId      String
   content       String
+  isPublic      Boolean  @default(true)
   revision      Int      @default(1)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -113,20 +181,7 @@ model DoctorNote {
   @@index([orgId, patientId, createdAt])
 }
 
-model InternalNote {
-  id        String   @id @default(cuid())
-  orgId     String
-  patientId String
-  authorId  String
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  author  User    @relation(fields: [authorId], references: [id], onDelete: Restrict)
-
-  @@index([orgId, patientId, createdAt])
-}
+// ─── Measurements ──────────────────────────────────────────────────────────────
 
 model MeasurementEntry {
   id             String   @id @default(cuid())
@@ -134,21 +189,23 @@ model MeasurementEntry {
   patientId      String
   appointmentId  String?
   recorderUserId String
+  metricTypeId   String
   source         String
   measuredAt     DateTime
-  weightKg       Decimal? @db.Decimal(6, 2)
-  bodyFatPct     Decimal? @db.Decimal(5, 2)
-  waistCm        Decimal? @db.Decimal(6, 2)
+  value          Decimal  @db.Decimal(10, 4)
   notes          String?
   createdAt      DateTime @default(now())
 
-  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient      Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
   appointment  Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
-  recorderUser User    @relation(fields: [recorderUserId], references: [id], onDelete: Restrict)
+  recorderUser User        @relation(fields: [recorderUserId], references: [id], onDelete: Restrict)
+  metricType   MetricType  @relation(fields: [metricTypeId], references: [id], onDelete: Restrict)
 
   @@index([orgId, patientId, measuredAt])
   @@index([appointmentId])
 }
+
+// ─── Assets ────────────────────────────────────────────────────────────────────
 
 model UploadedAsset {
   id            String   @id @default(cuid())
@@ -168,6 +225,38 @@ model UploadedAsset {
 
   @@index([orgId, patientId, kind])
 }
+
+// ─── Doctor availability ───────────────────────────────────────────────────────
+
+model WorkingHours {
+  id        String @id @default(cuid())
+  orgId     String
+  doctorId  String
+  dayOfWeek Int    // 0 = Sunday … 6 = Saturday
+  startTime String // "HH:MM"
+  endTime   String // "HH:MM"
+
+  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, dayOfWeek])
+  @@index([orgId, doctorId])
+}
+
+model CalendarBlock {
+  id        String   @id @default(cuid())
+  orgId     String
+  doctorId  String
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, doctorId, startsAt])
+}
+
+// ─── Audit ─────────────────────────────────────────────────────────────────────
 
 model AuditEvent {
   id         String   @id @default(cuid())

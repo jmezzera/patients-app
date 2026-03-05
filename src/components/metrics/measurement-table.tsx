@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MeasurementEntry } from "@prisma/client";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -10,12 +10,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-type MeasurementTableProps = {
-  rows: MeasurementEntry[];
+type MeasurementRow = {
+  id: string;
+  measuredAt: Date;
+  value: { toString(): string };
+  metricType: { name: string; unit: string | null };
+  source: string;
+  appointmentId: string | null;
+  notes: string | null;
+};
+
+type Props = {
+  rows: MeasurementRow[];
   showAppointmentLinks?: boolean;
 };
 
-export function MeasurementTable({ rows, showAppointmentLinks = false }: MeasurementTableProps) {
+export function MeasurementTable({ rows, showAppointmentLinks = false }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -26,9 +36,9 @@ export function MeasurementTable({ rows, showAppointmentLinks = false }: Measure
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Weight (kg)</TableHead>
-              <TableHead>Body fat (%)</TableHead>
-              <TableHead>Waist (cm)</TableHead>
+              <TableHead>Metric</TableHead>
+              <TableHead>Value</TableHead>
+              <TableHead>Source</TableHead>
               {showAppointmentLinks ? <TableHead>Appointment</TableHead> : null}
               <TableHead>Notes</TableHead>
             </TableRow>
@@ -37,14 +47,21 @@ export function MeasurementTable({ rows, showAppointmentLinks = false }: Measure
             {rows.map((row) => (
               <TableRow key={row.id} className="align-top">
                 <TableCell>{new Date(row.measuredAt).toLocaleDateString()}</TableCell>
-                <TableCell>{row.weightKg?.toString() ?? "—"}</TableCell>
-                <TableCell>{row.bodyFatPct?.toString() ?? "—"}</TableCell>
-                <TableCell>{row.waistCm?.toString() ?? "—"}</TableCell>
+                <TableCell>{row.metricType.name}</TableCell>
+                <TableCell>
+                  {row.value.toString()}
+                  {row.metricType.unit ? ` ${row.metricType.unit}` : ""}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={row.source === "patient_self" ? "secondary" : "outline"}>
+                    {row.source === "patient_self" ? "Self" : "Doctor"}
+                  </Badge>
+                </TableCell>
                 {showAppointmentLinks ? (
                   <TableCell>
                     {row.appointmentId ? (
                       <Link className="underline" href={`/appointments/${row.appointmentId}`}>
-                        View appointment
+                        View
                       </Link>
                     ) : (
                       "—"
