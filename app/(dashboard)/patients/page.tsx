@@ -32,8 +32,19 @@ export default async function PatientsPage() {
       </div>
       <ul className="grid gap-3 sm:grid-cols-2">
         {patients.map((patient) => (
-          <li key={patient.id} className="rounded-xl border bg-white p-4 shadow-sm">
-            <Link className="text-base font-medium hover:underline" href={`/patients/${patient.id}`}>
+          <li
+            key={patient.id}
+            className="rounded-xl border bg-white p-4 shadow-sm"
+            style={{ borderLeftColor: patient.color ?? "#e2e8f0", borderLeftWidth: 4 }}
+          >
+            <Link
+              className="flex items-center gap-2 text-base font-medium hover:underline"
+              href={`/patients/${patient.id}`}
+            >
+              <span
+                className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                style={{ backgroundColor: patient.color ?? "#cbd5e1" }}
+              />
               {patient.firstName} {patient.lastName}
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">

@@ -63,6 +63,7 @@ export async function updatePatientProfile(
     clinicalSummary?: string;
     phone?: string;
     assignedDoctorId?: string | null;
+    color?: string | null;
   },
 ) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
@@ -77,6 +78,7 @@ export async function updatePatientProfile(
       clinicalSummary: payload.clinicalSummary,
       phone: payload.phone,
       assignedDoctorId: payload.assignedDoctorId,
+      color: payload.color,
     },
   });
 

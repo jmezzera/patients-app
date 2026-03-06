@@ -8,6 +8,7 @@ const schema = z.object({
   clinicalSummary: z.string().optional(),
   phone: z.string().optional(),
   assignedDoctorId: z.string().nullable().optional(),
+  color: z.string().nullable().optional(),
 });
 
 type Props = { params: Promise<{ id: string }> };

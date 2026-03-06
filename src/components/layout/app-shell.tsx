@@ -18,7 +18,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       select: { role: true },
     });
     role = localUser?.role ?? null;
+    console.log(localUser)
   }
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">

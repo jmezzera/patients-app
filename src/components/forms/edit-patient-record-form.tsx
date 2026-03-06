@@ -18,6 +18,7 @@ type Props = {
     nutritionPlanId?: string | null;
     clinicalSummary?: string | null;
     assignedDoctorId?: string | null;
+    color?: string | null;
   };
 };
 
@@ -27,6 +28,7 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
   const [nutritionPlanId, setNutritionPlanId] = useState(defaults.nutritionPlanId ?? "");
   const [assignedDoctorId, setAssignedDoctorId] = useState(defaults.assignedDoctorId ?? "");
   const [clinicalSummary, setClinicalSummary] = useState(defaults.clinicalSummary ?? "");
+  const [color, setColor] = useState(defaults.color ?? "#6366f1");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -46,6 +48,7 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
             nutritionPlanId: nutritionPlanId || null,
             assignedDoctorId: assignedDoctorId || null,
             clinicalSummary: clinicalSummary || undefined,
+            color: color || null,
           }),
         });
 
@@ -54,7 +57,8 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
           setMessage("Patient record updated");
           router.refresh();
         } else {
-          setMessage("Unable to update patient record");
+          const data = await response.json().catch(() => ({}));
+          setMessage(data.error ?? "Unable to update patient record");
         }
       }}
     >
@@ -92,6 +96,32 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
           ))}
         </select>
       </label>
+      <div className="grid gap-1.5 text-sm">
+        <span>Patient colour</span>
+        <div className="flex items-center gap-2">
+          {["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7"].map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => setColor(preset)}
+              className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
+              style={{
+                backgroundColor: preset,
+                borderColor: color === preset ? "#0f172a" : "transparent",
+              }}
+              title={preset}
+            />
+          ))}
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="h-7 w-10 cursor-pointer rounded border p-0.5"
+            title="Custom colour"
+          />
+          <span className="text-xs text-muted-foreground">{color}</span>
+        </div>
+      </div>
       <label className="grid gap-1 text-sm">
         Clinical summary
         <Textarea

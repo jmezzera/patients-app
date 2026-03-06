@@ -9,7 +9,7 @@ import { ProfileCard } from "@/components/patient/profile-card";
 import { MeasurementTable } from "@/components/metrics/measurement-table";
 import { TrendChart } from "@/components/metrics/trend-chart";
 import { RadarChart } from "@/components/metrics/radar-chart";
-import { pivotMeasurements, buildRadarData } from "@/lib/chart-utils";
+import { pivotMeasurements, buildRadarData, type AppointmentMarker } from "@/lib/chart-utils";
 import { EditPatientRecordForm } from "@/components/forms/edit-patient-record-form";
 import { AddPatientNoteForm } from "@/components/forms/add-patient-note-form";
 import { AppointmentsCalendar } from "@/components/appointments/appointments-calendar";
@@ -37,6 +37,12 @@ export default async function PatientDetailPage({ params }: Props) {
   const appointments = patient.appointmentParticipants.map((p) => p.appointment);
   const { data: trendData, series: trendSeries } = pivotMeasurements(patient.measurementEntries);
   const radarData = buildRadarData(patient.measurementEntries);
+
+  const appointmentMarkers: AppointmentMarker[] = appointments.map((a) => ({
+    id: a.id,
+    date: new Date(a.scheduledAt).toLocaleDateString(),
+    label: a.doctor.displayName,
+  }));
 
   const calendarRows = appointments.map((a) => ({
     id: a.id,
@@ -76,6 +82,7 @@ export default async function PatientDetailPage({ params }: Props) {
                 nutritionPlanId: patient.nutritionPlanId,
                 assignedDoctorId: patient.assignedDoctorId,
                 clinicalSummary: patient.clinicalSummary,
+                color: patient.color,
               }}
             />
           </CardContent>
@@ -202,7 +209,7 @@ export default async function PatientDetailPage({ params }: Props) {
 
       <MeasurementTable rows={patient.measurementEntries} showAppointmentLinks />
       <RadarChart data={radarData} title="Metric snapshot (latest values)" />
-      <TrendChart data={trendData} series={trendSeries} />
+      <TrendChart data={trendData} series={trendSeries} appointments={appointmentMarkers} />
     </main>
   );
 }

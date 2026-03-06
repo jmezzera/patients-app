@@ -24,11 +24,25 @@ function statusBadge(status: AppointmentStatus) {
   return <Badge variant="outline">Booked</Badge>;
 }
 
-function patientLabel(participants: { patient: { firstName: string; lastName: string } }[]) {
-  if (participants.length === 0) return "—";
-  const first = participants[0].patient;
-  const label = `${first.firstName} ${first.lastName}`;
-  return participants.length > 1 ? `${label} +${participants.length - 1}` : label;
+function PatientCell({
+  participants,
+}: {
+  participants: { patient: { firstName: string; lastName: string; color?: string | null } }[];
+}) {
+  if (participants.length === 0) return <span>—</span>;
+  return (
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      {participants.map(({ patient }, i) => (
+        <span key={i} className="flex items-center gap-1">
+          <span
+            className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
+            style={{ backgroundColor: patient.color ?? "#cbd5e1" }}
+          />
+          {patient.firstName} {patient.lastName}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 export default async function AppointmentsPage() {
@@ -48,7 +62,10 @@ export default async function AppointmentsPage() {
     id: a.id,
     scheduledAt: a.scheduledAt,
     completedAt: a.completedAt,
-    label: patientLabel(a.participants),
+    label:
+      a.participants.length === 0
+        ? "—"
+        : a.participants.map((p) => `${p.patient.firstName} ${p.patient.lastName}`).join(", "),
   }));
 
   const defaultDoctorId = actor.role === Role.DOCTOR ? actor.id : undefined;
@@ -80,7 +97,7 @@ export default async function AppointmentsPage() {
                 <TableRow key={a.id}>
                   <TableCell>
                     <Link href={`/appointments/${a.id}`} className="underline">
-                      {patientLabel(a.participants)}
+                      <PatientCell participants={a.participants} />
                     </Link>
                   </TableCell>
                   <TableCell>{a.doctor.displayName}</TableCell>

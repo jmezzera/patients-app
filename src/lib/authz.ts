@@ -53,6 +53,7 @@ async function ensureLocalUser(clerkId: string) {
     update: {
       email: primaryEmail,
       displayName,
+      role,
     },
     create: {
       clerkId,

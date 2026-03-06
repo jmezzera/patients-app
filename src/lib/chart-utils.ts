@@ -12,6 +12,13 @@ export type RadarPoint = {
   unit?: string;
 };
 
+export type AppointmentMarker = {
+  id: string;
+  /** Same toLocaleDateString() format used by the chart x-axis */
+  date: string;
+  label?: string;
+};
+
 type MeasurementLike = {
   measuredAt: Date;
   value: { toString(): string };
