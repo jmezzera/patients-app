@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Role, AppointmentStatus } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { getPatientProfile } from "@/lib/repos/patients";
 import { listNutritionPlans } from "@/lib/repos/nutrition-plans";
@@ -9,7 +10,7 @@ import { ProfileCard } from "@/components/patient/profile-card";
 import { MeasurementTable } from "@/components/metrics/measurement-table";
 import { TrendChart } from "@/components/metrics/trend-chart";
 import { RadarChart } from "@/components/metrics/radar-chart";
-import { pivotMeasurements, buildRadarData, type AppointmentMarker } from "@/lib/chart-utils";
+import { pivotMeasurements, type AppointmentMarker, type RawMeasurement } from "@/lib/chart-utils";
 import { EditPatientRecordForm } from "@/components/forms/edit-patient-record-form";
 import { AddPatientNoteForm } from "@/components/forms/add-patient-note-form";
 import { AppointmentsCalendar } from "@/components/appointments/appointments-calendar";
@@ -21,6 +22,8 @@ type Props = { params: Promise<{ id: string }> };
 export default async function PatientDetailPage({ params }: Props) {
   const actor = await getSessionActor();
   const { id } = await params;
+  const t = await getTranslations("patients.detail");
+  const tc = await getTranslations("common");
 
   const [patient, nutritionPlans, doctors] = await Promise.all([
     getPatientProfile(actor, id),
@@ -36,7 +39,17 @@ export default async function PatientDetailPage({ params }: Props) {
 
   const appointments = patient.appointmentParticipants.map((p) => p.appointment);
   const { data: trendData, series: trendSeries } = pivotMeasurements(patient.measurementEntries);
-  const radarData = buildRadarData(patient.measurementEntries);
+
+  const rawRows: RawMeasurement[] = patient.measurementEntries.map((e) => ({
+    measuredAt: e.measuredAt.toISOString(),
+    value: parseFloat(e.value.toString()),
+    source: e.source as "doctor_visit" | "patient_self",
+    metricType: {
+      name: e.metricType.name,
+      unit: e.metricType.unit,
+      doctorOnly: e.metricType.doctorOnly,
+    },
+  }));
 
   const appointmentMarkers: AppointmentMarker[] = appointments.map((a) => ({
     id: a.id,
@@ -57,7 +70,7 @@ export default async function PatientDetailPage({ params }: Props) {
 
   return (
     <main className="mx-auto grid max-w-5xl gap-4 p-6">
-      <h1 className="text-2xl font-semibold">Patient detail</h1>
+      <h1 className="text-2xl font-semibold">{t("title")}</h1>
 
       <ProfileCard
         fullName={`${patient.firstName} ${patient.lastName}`}
@@ -70,7 +83,7 @@ export default async function PatientDetailPage({ params }: Props) {
       {canEdit && (
         <Card>
           <CardHeader>
-            <CardTitle>Update patient record</CardTitle>
+            <CardTitle>{t("updateRecord")}</CardTitle>
           </CardHeader>
           <CardContent>
             <EditPatientRecordForm
@@ -89,15 +102,15 @@ export default async function PatientDetailPage({ params }: Props) {
         </Card>
       )}
 
-      <AppointmentsCalendar title="Appointment calendar" appointments={calendarRows} />
+      <AppointmentsCalendar title={t("appointmentCalendar")} appointments={calendarRows} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Appointments</CardTitle>
+          <CardTitle>{t("appointments")}</CardTitle>
         </CardHeader>
         <CardContent>
           {appointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No appointments yet.</p>
+            <p className="text-sm text-muted-foreground">{t("noAppointments")}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {appointments.map((a) => (
@@ -109,11 +122,11 @@ export default async function PatientDetailPage({ params }: Props) {
                     <p className="text-xs text-muted-foreground">{a.doctor.displayName}</p>
                   </div>
                   {a.status === AppointmentStatus.COMPLETED ? (
-                    <Badge>Completed</Badge>
+                    <Badge>{tc("status.completed")}</Badge>
                   ) : a.status === AppointmentStatus.CANCELLED ? (
-                    <Badge className="border-red-300 bg-red-100 text-red-700">Cancelled</Badge>
+                    <Badge className="border-red-300 bg-red-100 text-red-700">{tc("status.cancelled")}</Badge>
                   ) : (
-                    <Badge variant="outline">Booked</Badge>
+                    <Badge variant="outline">{tc("status.booked")}</Badge>
                   )}
                 </li>
               ))}
@@ -124,12 +137,12 @@ export default async function PatientDetailPage({ params }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Public notes</CardTitle>
+          <CardTitle>{t("publicNotes")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {canEdit && <AddPatientNoteForm patientId={patient.id} />}
           {publicNotes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No public notes.</p>
+            <p className="text-sm text-muted-foreground">{t("noPublicNotes")}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {publicNotes.map((note) => (
@@ -144,11 +157,11 @@ export default async function PatientDetailPage({ params }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Internal notes</CardTitle>
+          <CardTitle>{t("internalNotes")}</CardTitle>
         </CardHeader>
         <CardContent>
           {internalNotes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No internal notes.</p>
+            <p className="text-sm text-muted-foreground">{t("noInternalNotes")}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {internalNotes.map((note) => (
@@ -163,11 +176,11 @@ export default async function PatientDetailPage({ params }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Uploaded files</CardTitle>
+          <CardTitle>{t("uploadedFiles")}</CardTitle>
         </CardHeader>
         <CardContent>
           {patient.uploadedAssets.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No files uploaded.</p>
+            <p className="text-sm text-muted-foreground">{t("noFiles")}</p>
           ) : (
             <ul className="space-y-2">
               {patient.uploadedAssets.map((asset) => (
@@ -185,7 +198,7 @@ export default async function PatientDetailPage({ params }: Props) {
                         className="text-xs underline"
                         href={`/appointments/${asset.appointmentId}`}
                       >
-                        Linked appointment
+                        {tc("linkedAppointment")}
                       </Link>
                     )}
                   </div>
@@ -197,7 +210,7 @@ export default async function PatientDetailPage({ params }: Props) {
                       rel="noreferrer"
                       className="text-sm underline"
                     >
-                      Open
+                      {tc("open")}
                     </a>
                   </div>
                 </li>
@@ -208,8 +221,8 @@ export default async function PatientDetailPage({ params }: Props) {
       </Card>
 
       <MeasurementTable rows={patient.measurementEntries} showAppointmentLinks />
-      <RadarChart data={radarData} title="Metric snapshot (latest values)" />
-      <TrendChart data={trendData} series={trendSeries} appointments={appointmentMarkers} />
+      <RadarChart rawRows={rawRows} title={t("metricSnapshot")} />
+      <TrendChart data={trendData} series={trendSeries} title={t("historicTrends")} appointments={appointmentMarkers} />
     </main>
   );
 }

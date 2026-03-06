@@ -1,14 +1,16 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { listMeasurements } from "@/lib/repos/measurements";
 import { db } from "@/lib/db";
 import { MeasurementTable } from "@/components/metrics/measurement-table";
 import { TrendChart } from "@/components/metrics/trend-chart";
 import { RadarChart } from "@/components/metrics/radar-chart";
-import { pivotMeasurements, buildRadarData, type AppointmentMarker } from "@/lib/chart-utils";
+import { pivotMeasurements, type AppointmentMarker, type RawMeasurement } from "@/lib/chart-utils";
 
 export default async function TrendsPage() {
   const actor = await getSessionActor();
+  const t = await getTranslations("patient.trends");
 
   if (!actor.patientId) {
     notFound();
@@ -25,7 +27,17 @@ export default async function TrendsPage() {
   ]);
 
   const { data, series } = pivotMeasurements(rows);
-  const radarData = buildRadarData(rows);
+
+  const rawRows: RawMeasurement[] = rows.map((r) => ({
+    measuredAt: r.measuredAt.toISOString(),
+    value: parseFloat(r.value.toString()),
+    source: r.source as "doctor_visit" | "patient_self",
+    metricType: {
+      name: r.metricType.name,
+      unit: r.metricType.unit,
+      doctorOnly: r.metricType.doctorOnly,
+    },
+  }));
 
   const appointmentMarkers: AppointmentMarker[] = participantRows.map((p) => ({
     id: p.appointment.id,
@@ -35,12 +47,12 @@ export default async function TrendsPage() {
   return (
     <main className="mx-auto grid max-w-5xl gap-4 px-6 py-10">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">My trends</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Historical measurements over time.</p>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
       <MeasurementTable rows={rows} showAppointmentLinks />
-      <RadarChart data={radarData} title="Current metric snapshot" />
-      <TrendChart data={data} series={series} appointments={appointmentMarkers} />
+      <RadarChart rawRows={rawRows} title={t("metricSnapshot")} />
+      <TrendChart data={data} series={series} title={t("historicTrends")} appointments={appointmentMarkers} isPatient />
     </main>
   );
 }

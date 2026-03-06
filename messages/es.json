@@ -1,0 +1,284 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "patients": "Pacientes",
+    "appointments": "Citas",
+    "stats": "Estadísticas",
+    "availability": "Disponibilidad",
+    "metrics": "Métricas",
+    "nutritionPlans": "Planes nutricionales",
+    "myProfile": "Mi perfil",
+    "measurements": "Medidas",
+    "trends": "Tendencias",
+    "signIn": "Iniciar sesión",
+    "createAccount": "Crear cuenta"
+  },
+  "locale": {
+    "label": "Idioma"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "update": "Actualizar",
+    "delete": "Eliminar",
+    "open": "Abrir",
+    "loading": "Cargando…",
+    "noData": "Sin datos.",
+    "linkedAppointment": "Cita vinculada",
+    "refresh": "Actualizar",
+    "saving": "Guardando...",
+    "saved": "¡Guardado!",
+    "creating": "Creando...",
+    "remove": "Eliminar",
+    "add": "Agregar",
+    "to": "a",
+    "view": "Ver",
+    "noneOption": "— Ninguno —",
+    "status": {
+      "booked": "Reservada",
+      "completed": "Completada",
+      "cancelled": "Cancelada"
+    }
+  },
+  "dashboard": {
+    "title": "Panel",
+    "subtitle": "Resumen de la actividad de pacientes y progreso clínico.",
+    "nav": {
+      "workspace": "Espacio de trabajo",
+      "clinicalRecords": "Registros clínicos"
+    },
+    "stats": {
+      "totalPatients": "Total de pacientes",
+      "appointmentsCompleted": "Citas completadas",
+      "measurementsLogged": "Medidas registradas",
+      "completedAppointments": "Citas completadas",
+      "upcomingAppointments": "Próximas citas",
+      "averageMetrics": "Métricas promedio"
+    },
+    "recentAppointments": {
+      "title": "Citas recientes",
+      "description": "Últimas visitas de pacientes programadas",
+      "patient": "Paciente",
+      "date": "Fecha",
+      "status": "Estado",
+      "openAll": "Ver todos los expedientes"
+    }
+  },
+  "patients": {
+    "title": "Pacientes",
+    "addPatient": "Agregar paciente",
+    "noPatients": "Sin pacientes todavía.",
+    "subtitle": "{count} perfiles activos en tu espacio de trabajo.",
+    "noDoctorAssigned": "Sin médico asignado",
+    "form": {
+      "title": "Nuevo paciente",
+      "button": "Nuevo paciente",
+      "firstName": "Nombre *",
+      "lastName": "Apellido *",
+      "phone": "Teléfono",
+      "dob": "Fecha de nacimiento",
+      "assignedDoctor": "Médico asignado",
+      "nutritionPlan": "Plan nutricional",
+      "clinicalSummary": "Resumen clínico",
+      "creating": "Creando...",
+      "createPatient": "Crear paciente",
+      "failedCreate": "Error al crear el paciente"
+    },
+    "detail": {
+      "title": "Detalle del paciente",
+      "updateRecord": "Actualizar registro",
+      "appointmentCalendar": "Calendario de citas",
+      "appointments": "Citas",
+      "publicNotes": "Notas públicas",
+      "internalNotes": "Notas internas",
+      "uploadedFiles": "Archivos subidos",
+      "metricSnapshot": "Instantánea de métricas",
+      "historicTrends": "Tendencias históricas",
+      "noAppointments": "Sin citas todavía.",
+      "noPublicNotes": "Sin notas públicas.",
+      "noInternalNotes": "Sin notas internas.",
+      "noFiles": "Sin archivos subidos.",
+      "updateForm": {
+        "phone": "Teléfono",
+        "assignedDoctor": "Médico asignado",
+        "nutritionPlan": "Plan nutricional",
+        "color": "Color del paciente",
+        "clinicalSummary": "Resumen clínico",
+        "saving": "Guardando...",
+        "updateRecord": "Actualizar registro",
+        "patientRecordUpdated": "Registro actualizado",
+        "failedUpdate": "No se pudo actualizar el registro"
+      },
+      "noteForm": {
+        "placeholder": "Agregar una nota sobre este paciente...",
+        "visibleToPatient": "Visible para el paciente",
+        "addNote": "Agregar nota"
+      }
+    }
+  },
+  "appointments": {
+    "title": "Citas",
+    "newAppointment": "Nueva cita",
+    "noAppointments": "Sin citas.",
+    "calendarTitle": "Calendario de citas",
+    "tableHeaders": {
+      "patients": "Paciente(s)",
+      "doctor": "Médico",
+      "scheduled": "Programada",
+      "status": "Estado"
+    },
+    "form": {
+      "title": "Nueva cita",
+      "button": "Nueva cita",
+      "doctor": "Médico",
+      "patients": "Pacientes (selecciona uno o más)",
+      "dateAndTime": "Fecha y hora",
+      "creating": "Creando...",
+      "createAppointment": "Crear cita",
+      "failedCreate": "Error al crear la cita"
+    },
+    "detail": {
+      "title": "Cita",
+      "doctor": "Médico",
+      "metrics": "Métricas",
+      "noMetrics": "Sin métricas registradas.",
+      "notes": "Notas",
+      "noNotes": "Sin notas todavía.",
+      "files": "Archivos",
+      "noFiles": "Sin archivos subidos.",
+      "public": "Pública",
+      "internal": "Interna",
+      "markCompleted": "Marcar como completada",
+      "cancel": "Cancelar"
+    }
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "subtitle": "Volumen de citas y tendencias de pacientes en el período seleccionado.",
+    "dateRange": {
+      "from": "Desde",
+      "to": "Hasta",
+      "doctor": "Médico",
+      "allDoctors": "Todos los médicos"
+    },
+    "cards": {
+      "totalAppointments": "Total de citas",
+      "completed": "Completadas",
+      "completionRate": "Tasa de finalización",
+      "totalPatients": "Total de pacientes"
+    },
+    "chart": {
+      "title": "Volumen de citas",
+      "description": "Citas semanales durante el período seleccionado",
+      "noData": "Sin datos para este período."
+    },
+    "series": {
+      "total": "Total",
+      "completed": "Completadas"
+    }
+  },
+  "availability": {
+    "title": "Disponibilidad",
+    "subtitle": "Establece tu horario semanal y bloquea los tiempos no disponibles.",
+    "workingHours": {
+      "title": "Horario semanal",
+      "to": "a",
+      "off": "Libre",
+      "saveSchedule": "Guardar horario",
+      "saving": "Guardando...",
+      "saved": "¡Guardado!"
+    },
+    "blocks": {
+      "title": "Períodos bloqueados",
+      "from": "Desde",
+      "to": "Hasta",
+      "reasonPlaceholder": "Motivo (opcional)",
+      "addBlock": "Agregar bloqueo",
+      "noBlocks": "Sin bloqueos próximos.",
+      "remove": "Eliminar"
+    },
+    "days": {
+      "0": "Domingo",
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado"
+    }
+  },
+  "metricTypes": {
+    "title": "Tipos de métricas",
+    "subtitle": "Define los tipos de medición utilizados para el seguimiento de pacientes.",
+    "namePlaceholder": "Nombre (ej. Peso)",
+    "unitPlaceholder": "Unidad (ej. kg)",
+    "doctorOnly": "Solo médico (oculto para pacientes)",
+    "doctorOnlyBadge": "Solo médico",
+    "addMetricType": "Agregar tipo de métrica",
+    "noMetricTypes": "Sin tipos de métricas todavía."
+  },
+  "nutritionPlans": {
+    "title": "Planes nutricionales",
+    "subtitle": "Administra los planes nutricionales disponibles para asignar a pacientes.",
+    "plans": "Planes",
+    "planNamePlaceholder": "Nombre del plan",
+    "add": "Agregar",
+    "noPlans": "Sin planes nutricionales todavía."
+  },
+  "patient": {
+    "myProfile": "Mi perfil",
+    "profile": {
+      "title": "Perfil del paciente",
+      "name": "Nombre",
+      "phone": "Teléfono",
+      "assignedDoctor": "Médico asignado",
+      "nutritionPlan": "Plan nutricional",
+      "clinicalSummary": "Resumen clínico"
+    },
+    "me": {
+      "title": "Mi perfil",
+      "subtitle": "Datos personales y objetivos nutricionales compartidos con tu equipo médico.",
+      "internalTitle": "Mi perfil",
+      "internalSubtitle": "Los usuarios internos aún no tienen perfil.",
+      "myAppointments": "Mis citas",
+      "noAppointments": "Sin citas.",
+      "notesFromDoctor": "Notas de tu médico",
+      "viewTrends": "Ver tendencias de medidas →"
+    },
+    "measurements": {
+      "title": "Mis medidas",
+      "table": {
+        "title": "Medidas",
+        "date": "Fecha",
+        "metric": "Métrica",
+        "value": "Valor",
+        "source": "Origen",
+        "appointment": "Cita",
+        "notes": "Notas",
+        "self": "Autorreporte",
+        "doctor": "Médico",
+        "view": "Ver"
+      },
+      "form": {
+        "title": "Registrar medidas",
+        "description": "Registra tus medidas y mantén informado a tu equipo médico.",
+        "date": "Fecha",
+        "datePlaceholder": "Elegir fecha de medición",
+        "metricType": "Tipo de métrica",
+        "value": "Valor",
+        "notes": "Notas",
+        "saving": "Guardando medida...",
+        "save": "Guardar medida",
+        "saved": "Medida guardada",
+        "failedSave": "No se pudo guardar la medida"
+      }
+    },
+    "trends": {
+      "title": "Mis tendencias",
+      "subtitle": "Medidas históricas a lo largo del tiempo.",
+      "metricSnapshot": "Instantánea de métricas",
+      "historicTrends": "Tendencias históricas"
+    }
+  }
+}

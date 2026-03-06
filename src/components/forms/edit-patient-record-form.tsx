@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,8 @@ type Props = {
 
 export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defaults }: Props) {
   const router = useRouter();
+  const t = useTranslations("patients.detail.updateForm");
+  const tc = useTranslations("common");
   const [phone, setPhone] = useState(defaults.phone ?? "");
   const [nutritionPlanId, setNutritionPlanId] = useState(defaults.nutritionPlanId ?? "");
   const [assignedDoctorId, setAssignedDoctorId] = useState(defaults.assignedDoctorId ?? "");
@@ -54,26 +57,26 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
 
         setSaving(false);
         if (response.ok) {
-          setMessage("Patient record updated");
+          setMessage(t("patientRecordUpdated"));
           router.refresh();
         } else {
           const data = await response.json().catch(() => ({}));
-          setMessage(data.error ?? "Unable to update patient record");
+          setMessage(data.error ?? t("failedUpdate"));
         }
       }}
     >
       <label className="grid gap-1 text-sm">
-        Phone
+        {t("phone")}
         <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
       </label>
       <label className="grid gap-1 text-sm">
-        Assigned doctor
+        {t("assignedDoctor")}
         <select
           value={assignedDoctorId}
           onChange={(e) => setAssignedDoctorId(e.target.value)}
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
         >
-          <option value="">— None —</option>
+          <option value="">{tc("noneOption")}</option>
           {doctors.map((d) => (
             <option key={d.id} value={d.id}>
               {d.displayName}
@@ -82,13 +85,13 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
         </select>
       </label>
       <label className="grid gap-1 text-sm">
-        Nutrition plan
+        {t("nutritionPlan")}
         <select
           value={nutritionPlanId}
           onChange={(e) => setNutritionPlanId(e.target.value)}
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
         >
-          <option value="">— None —</option>
+          <option value="">{tc("noneOption")}</option>
           {nutritionPlans.map((plan) => (
             <option key={plan.id} value={plan.id}>
               {plan.name}
@@ -97,7 +100,7 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
         </select>
       </label>
       <div className="grid gap-1.5 text-sm">
-        <span>Patient colour</span>
+        <span>{t("color")}</span>
         <div className="flex items-center gap-2">
           {["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7"].map((preset) => (
             <button
@@ -123,14 +126,14 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
         </div>
       </div>
       <label className="grid gap-1 text-sm">
-        Clinical summary
+        {t("clinicalSummary")}
         <Textarea
           value={clinicalSummary}
           onChange={(e) => setClinicalSummary(e.target.value)}
         />
       </label>
       <Button disabled={saving} variant="outline">
-        {saving ? "Saving..." : "Update record"}
+        {saving ? t("saving") : t("updateRecord")}
       </Button>
       {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
     </form>

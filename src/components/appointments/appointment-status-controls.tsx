@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AppointmentStatus } from "@prisma/client";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,8 @@ type Props = {
 
 export function AppointmentStatusControls({ appointmentId, currentStatus }: Props) {
   const router = useRouter();
+  const t = useTranslations("appointments.detail");
+  const tc = useTranslations("common");
   const [loading, setLoading] = useState(false);
 
   async function updateStatus(status: AppointmentStatus) {
@@ -34,7 +37,7 @@ export function AppointmentStatusControls({ appointmentId, currentStatus }: Prop
           disabled={loading}
           onClick={() => updateStatus(AppointmentStatus.COMPLETED)}
         >
-          Mark completed
+          {t("markCompleted")}
         </Button>
         <Button
           size="sm"
@@ -42,15 +45,15 @@ export function AppointmentStatusControls({ appointmentId, currentStatus }: Prop
           disabled={loading}
           onClick={() => updateStatus(AppointmentStatus.CANCELLED)}
         >
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     );
   }
 
   if (currentStatus === AppointmentStatus.COMPLETED) {
-    return <Badge>Completed</Badge>;
+    return <Badge>{tc("status.completed")}</Badge>;
   }
 
-  return <Badge className="border-red-300 bg-red-100 text-red-700">Cancelled</Badge>;
+  return <Badge className="border-red-300 bg-red-100 text-red-700">{tc("status.cancelled")}</Badge>;
 }

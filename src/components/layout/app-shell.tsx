@@ -3,13 +3,16 @@ import type { Route } from "next";
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 const signInRoute = "/sign-in" as Route;
 const signUpRoute = "/sign-up" as Route;
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const { userId } = await auth();
+  const t = await getTranslations("nav");
 
   let role: Role | null = null;
   if (userId) {
@@ -18,9 +21,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       select: { role: true },
     });
     role = localUser?.role ?? null;
-    console.log(localUser)
   }
-
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -35,34 +36,34 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 {role !== Role.PATIENT ? (
                   <>
                     <Link href="/dashboard" className="hover:text-foreground">
-                      Dashboard
+                      {t("dashboard")}
                     </Link>
                     <Link href="/patients" className="hover:text-foreground">
-                      Patients
+                      {t("patients")}
                     </Link>
                     <Link href="/appointments" className="hover:text-foreground">
-                      Appointments
+                      {t("appointments")}
                     </Link>
                     <a href="/stats" className="hover:text-foreground">
-                      Stats
+                      {t("stats")}
                     </a>
                     {role === Role.DOCTOR && (
                       <>
                         <a href="/availability" className="hover:text-foreground">
-                          Availability
+                          {t("availability")}
                         </a>
                         <a href="/metric-types" className="hover:text-foreground">
-                          Metrics
+                          {t("metrics")}
                         </a>
                       </>
                     )}
                     {role === Role.MANAGER && (
                       <>
                         <a href="/nutrition-plans" className="hover:text-foreground">
-                          Nutrition plans
+                          {t("nutritionPlans")}
                         </a>
                         <a href="/metric-types" className="hover:text-foreground">
-                          Metrics
+                          {t("metrics")}
                         </a>
                       </>
                     )}
@@ -71,29 +72,31 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 {role === Role.PATIENT ? (
                   <>
                     <Link href="/me" className="hover:text-foreground">
-                      My profile
+                      {t("myProfile")}
                     </Link>
                     <Link href="/measurements" className="hover:text-foreground">
-                      Measurements
+                      {t("measurements")}
                     </Link>
                     <Link href="/trends" className="hover:text-foreground">
-                      Trends
+                      {t("trends")}
                     </Link>
                   </>
                 ) : null}
+                <LocaleSwitcher />
                 <UserButton afterSignOutUrl="/" />
               </>
             ) : (
               <>
                 <Link href={signInRoute} className="hover:text-foreground">
-                  Sign in
+                  {t("signIn")}
                 </Link>
                 <Link
                   href={signUpRoute}
                   className="rounded-md border px-3 py-1.5 text-foreground hover:bg-muted"
                 >
-                  Create account
+                  {t("createAccount")}
                 </Link>
+                <LocaleSwitcher />
               </>
             )}
           </nav>

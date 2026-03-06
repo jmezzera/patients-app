@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Area,
   AreaChart,
+  Brush,
   CartesianGrid,
   Legend,
   ReferenceLine,
@@ -21,11 +22,22 @@ export { pivotMeasurements } from "@/lib/chart-utils";
 
 import type { TrendSeries, AppointmentMarker } from "@/lib/chart-utils";
 
+type Timeframe = "1W" | "1M" | "3M" | "All";
+const TIMEFRAME_OPTIONS: Timeframe[] = ["1W", "1M", "3M", "All"];
+const TIMEFRAME_DAYS: Record<Timeframe, number | null> = {
+  "1W": 7,
+  "1M": 30,
+  "3M": 90,
+  All: null,
+};
+
 type Props = {
   data: Array<Record<string, string | number | null>>;
   series: TrendSeries[];
   title?: string;
   appointments?: AppointmentMarker[];
+  /** When true, hides doctorOnly series (PATIENT role view) */
+  isPatient?: boolean;
 };
 
 const COLORS = ["#0f172a", "#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444"];
@@ -67,10 +79,43 @@ export function TrendChart({
   series,
   title = "Historic trends",
   appointments = [],
+  isPatient = false,
 }: Props) {
   const router = useRouter();
-  const chartData = data.slice().reverse();
   const [hovered, setHovered] = useState<HoveredMarker | null>(null);
+  const [timeframe, setTimeframe] = useState<Timeframe>("All");
+
+  // Series visible to this role
+  const visibleSeries = useMemo(
+    () => series.filter((s) => !isPatient || !s.doctorOnly),
+    [series, isPatient],
+  );
+
+  // Track which series are enabled (all on by default)
+  const [enabledKeys, setEnabledKeys] = useState<Set<string>>(
+    () => new Set(visibleSeries.map((s) => s.key)),
+  );
+
+  const toggleKey = useCallback((key: string) => {
+    setEnabledKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  // Filter data by selected timeframe (uses _ts added by pivotMeasurements)
+  const chartData = useMemo(() => {
+    const reversed = data.slice().reverse(); // oldest → newest for display
+    const days = TIMEFRAME_DAYS[timeframe];
+    if (!days) return reversed;
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    return reversed.filter((d) => typeof d._ts === "number" && (d._ts as number) >= cutoff);
+  }, [data, timeframe]);
 
   const handleEnter = useCallback((e: React.MouseEvent, appt: AppointmentMarker) => {
     setHovered({ appt, x: e.clientX, y: e.clientY });
@@ -81,14 +126,32 @@ export function TrendChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle>{title}</CardTitle>
+          <div className="flex items-center gap-1">
+            {TIMEFRAME_OPTIONS.map((tf) => (
+              <button
+                key={tf}
+                type="button"
+                onClick={() => setTimeframe(tf)}
+                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                  timeframe === tf
+                    ? "bg-slate-900 text-white"
+                    : "text-muted-foreground hover:bg-slate-100"
+                }`}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-80 w-full rounded-lg border bg-gradient-to-b from-slate-50 to-white p-3">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
-                {series.map((s, i) => (
+                {visibleSeries.map((s, i) => (
                   <linearGradient key={s.key} id={`grad-${s.key}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.2} />
                     <stop offset="95%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0} />
@@ -103,18 +166,23 @@ export function TrendChart({
                 labelStyle={{ fontWeight: 600 }}
               />
               <Legend />
-              {series.map((s, i) => (
-                <Area
-                  key={s.key}
-                  type="monotone"
-                  dataKey={s.key}
-                  name={s.unit ? `${s.name} (${s.unit})` : s.name}
-                  stroke={COLORS[i % COLORS.length]}
-                  fill={`url(#grad-${s.key})`}
-                  strokeWidth={2}
-                  connectNulls
-                />
-              ))}
+              {visibleSeries.map((s, i) =>
+                enabledKeys.has(s.key) ? (
+                  <Area
+                    key={s.key}
+                    type="monotone"
+                    dataKey={s.key}
+                    name={s.unit ? `${s.name} (${s.unit})` : s.name}
+                    stroke={COLORS[i % COLORS.length]}
+                    fill={s.source === "patient_self" ? "none" : `url(#grad-${s.key})`}
+                    fillOpacity={s.source === "patient_self" ? 0 : 1}
+                    strokeWidth={s.source === "patient_self" ? 1.5 : 2}
+                    strokeDasharray={s.source === "patient_self" ? "5 3" : undefined}
+                    dot={s.source === "patient_self" ? { r: 2, fill: COLORS[i % COLORS.length] } : false}
+                    connectNulls
+                  />
+                ) : null,
+              )}
               {appointments.map((appt) => (
                 <ReferenceLine
                   key={appt.id}
@@ -133,9 +201,36 @@ export function TrendChart({
                   )}
                 />
               ))}
+              {chartData.length > 1 && (
+                <Brush dataKey="date" height={22} stroke="#e2e8f0" travellerWidth={6} />
+              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
+
+        {/* Series toggles — shown only when there is more than one visible series */}
+        {visibleSeries.length > 1 && (
+          <div className="mt-3 flex flex-wrap gap-4">
+            {visibleSeries.map((s, i) => (
+              <label
+                key={s.key}
+                className="flex cursor-pointer select-none items-center gap-1.5 text-xs"
+              >
+                <input
+                  type="checkbox"
+                  checked={enabledKeys.has(s.key)}
+                  onChange={() => toggleKey(s.key)}
+                  className="accent-indigo-600"
+                />
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                />
+                <span className="text-muted-foreground">{s.name}</span>
+              </label>
+            ))}
+          </div>
+        )}
 
         {hovered && (
           <div

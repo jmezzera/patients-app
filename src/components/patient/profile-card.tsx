@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ProfileCardProps = {
@@ -8,38 +9,39 @@ type ProfileCardProps = {
   phone?: string | null;
 };
 
-export function ProfileCard({
+export async function ProfileCard({
   fullName,
   nutritionPlan,
   assignedDoctor,
   clinicalSummary,
   phone,
 }: ProfileCardProps) {
+  const t = await getTranslations("patient.profile");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Patient profile</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <dl className="mt-3 space-y-2 text-sm">
           <div>
-            <dt className="font-medium">Name</dt>
+            <dt className="font-medium">{t("name")}</dt>
             <dd>{fullName}</dd>
           </div>
           <div>
-            <dt className="font-medium">Phone</dt>
+            <dt className="font-medium">{t("phone")}</dt>
             <dd>{phone ?? "—"}</dd>
           </div>
           <div>
-            <dt className="font-medium">Assigned doctor</dt>
+            <dt className="font-medium">{t("assignedDoctor")}</dt>
             <dd>{assignedDoctor ?? "—"}</dd>
           </div>
           <div>
-            <dt className="font-medium">Nutrition plan</dt>
+            <dt className="font-medium">{t("nutritionPlan")}</dt>
             <dd>{nutritionPlan ?? "—"}</dd>
           </div>
           <div>
-            <dt className="font-medium">Clinical summary</dt>
+            <dt className="font-medium">{t("clinicalSummary")}</dt>
             <dd>{clinicalSummary ?? "—"}</dd>
           </div>
         </dl>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +52,8 @@ export function AppointmentPatientTabs({
   metricTypes,
   canEdit,
 }: Props) {
+  const t = useTranslations("appointments.detail");
+  const tc = useTranslations("common");
   if (patients.length === 0) return null;
 
   return (
@@ -77,7 +80,7 @@ export function AppointmentPatientTabs({
             {/* Metrics */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Metrics</CardTitle>
+                <CardTitle className="text-base">{t("metrics")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {canEdit && metricTypes.length > 0 && (
@@ -88,7 +91,7 @@ export function AppointmentPatientTabs({
                   />
                 )}
                 {patientMetrics.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No metrics recorded.</p>
+                  <p className="text-sm text-muted-foreground">{t("noMetrics")}</p>
                 ) : (
                   <ul className="space-y-1 text-sm">
                     {patientMetrics.map((m) => (
@@ -108,7 +111,7 @@ export function AppointmentPatientTabs({
             {/* Notes */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Notes</CardTitle>
+                <CardTitle className="text-base">{t("notes")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {canEdit && (
@@ -118,7 +121,7 @@ export function AppointmentPatientTabs({
                   />
                 )}
                 {patientNotes.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No notes yet.</p>
+                  <p className="text-sm text-muted-foreground">{t("noNotes")}</p>
                 ) : (
                   <ul className="space-y-2 text-sm">
                     {patientNotes.map((note) => (
@@ -129,7 +132,7 @@ export function AppointmentPatientTabs({
                           </span>
                           <div className="flex items-center gap-2">
                             <Badge variant={note.isPublic ? "outline" : "secondary"}>
-                              {note.isPublic ? "Public" : "Internal"}
+                              {note.isPublic ? t("public") : t("internal")}
                             </Badge>
                             {canEdit && (
                               <NoteVisibilityToggle noteId={note.id} isPublic={note.isPublic} />
@@ -147,14 +150,14 @@ export function AppointmentPatientTabs({
             {/* Files */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Files</CardTitle>
+                <CardTitle className="text-base">{t("files")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {canEdit && (
                   <AssetUploader patientId={patient.id} appointmentId={appointmentId} />
                 )}
                 {patientAssets.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No files uploaded.</p>
+                  <p className="text-sm text-muted-foreground">{t("noFiles")}</p>
                 ) : (
                   <ul className="space-y-2">
                     {patientAssets.map((asset) => (
@@ -175,7 +178,7 @@ export function AppointmentPatientTabs({
                           rel="noreferrer"
                           className="text-sm underline"
                         >
-                          Open
+                          {tc("open")}
                         </a>
                       </li>
                     ))}

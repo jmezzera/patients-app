@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,8 @@ type Props = {
 
 export function CreatePatientForm({ doctors, nutritionPlans, onCreated }: Props) {
   const router = useRouter();
+  const t = useTranslations("patients.form");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +56,7 @@ export function CreatePatientForm({ doctors, nutritionPlans, onCreated }: Props)
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to create patient");
+      setError(data.error ?? t("failedCreate"));
       return;
     }
 
@@ -69,73 +72,73 @@ export function CreatePatientForm({ doctors, nutritionPlans, onCreated }: Props)
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)}>New patient</Button>
+      <Button onClick={() => setOpen(true)}>{t("button")}</Button>
     );
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>New patient</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-2">
           <label className="grid flex-1 gap-1 text-sm">
-            First name *
+            {t("firstName")}
             <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </label>
           <label className="grid flex-1 gap-1 text-sm">
-            Last name *
+            {t("lastName")}
             <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </label>
         </div>
         <div className="flex gap-2">
           <label className="grid flex-1 gap-1 text-sm">
-            Phone
+            {t("phone")}
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </label>
           <label className="grid flex-1 gap-1 text-sm">
-            Date of birth
+            {t("dob")}
             <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
           </label>
         </div>
         <label className="grid gap-1 text-sm">
-          Assigned doctor
+          {t("assignedDoctor")}
           <select
             value={assignedDoctorId}
             onChange={(e) => setAssignedDoctorId(e.target.value)}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
           >
-            <option value="">— None —</option>
+            <option value="">{tc("noneOption")}</option>
             {doctors.map((d) => (
               <option key={d.id} value={d.id}>{d.displayName}</option>
             ))}
           </select>
         </label>
         <label className="grid gap-1 text-sm">
-          Nutrition plan
+          {t("nutritionPlan")}
           <select
             value={nutritionPlanId}
             onChange={(e) => setNutritionPlanId(e.target.value)}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
           >
-            <option value="">— None —</option>
+            <option value="">{tc("noneOption")}</option>
             {nutritionPlans.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         </label>
         <label className="grid gap-1 text-sm">
-          Clinical summary
+          {t("clinicalSummary")}
           <Textarea value={clinicalSummary} onChange={(e) => setClinicalSummary(e.target.value)} />
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex gap-2">
           <Button onClick={submit} disabled={saving || !firstName.trim() || !lastName.trim()}>
-            {saving ? "Creating..." : "Create patient"}
+            {saving ? t("creating") : t("createPatient")}
           </Button>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {tc("cancel")}
           </Button>
         </div>
       </CardContent>

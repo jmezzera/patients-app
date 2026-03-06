@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ type Block = { id: string; startsAt: Date; endsAt: Date; reason: string | null }
 type Props = { blocks: Block[] };
 
 export function CalendarBlocksPanel({ blocks: initial }: Props) {
+  const t = useTranslations("availability.blocks");
   const [blocks, setBlocks] = useState(initial);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -41,13 +43,13 @@ export function CalendarBlocksPanel({ blocks: initial }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Blocked times</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-2">
           <div className="flex gap-2">
             <div className="grid gap-1 text-sm">
-              <label>From</label>
+              <label>{t("from")}</label>
               <Input
                 type="datetime-local"
                 value={startsAt}
@@ -55,7 +57,7 @@ export function CalendarBlocksPanel({ blocks: initial }: Props) {
               />
             </div>
             <div className="grid gap-1 text-sm">
-              <label>To</label>
+              <label>{t("to")}</label>
               <Input
                 type="datetime-local"
                 value={endsAt}
@@ -64,17 +66,17 @@ export function CalendarBlocksPanel({ blocks: initial }: Props) {
             </div>
           </div>
           <Input
-            placeholder="Reason (optional)"
+            placeholder={t("reasonPlaceholder")}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
           <Button onClick={add} disabled={saving || !startsAt || !endsAt}>
-            Add block
+            {t("addBlock")}
           </Button>
         </div>
 
         {blocks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No upcoming blocks.</p>
+          <p className="text-sm text-muted-foreground">{t("noBlocks")}</p>
         ) : (
           <ul className="space-y-2">
             {blocks.map((block) => (
@@ -94,7 +96,7 @@ export function CalendarBlocksPanel({ blocks: initial }: Props) {
                   className="text-red-600 hover:text-red-700"
                   onClick={() => remove(block.id)}
                 >
-                  Remove
+                  {t("remove")}
                 </Button>
               </li>
             ))}

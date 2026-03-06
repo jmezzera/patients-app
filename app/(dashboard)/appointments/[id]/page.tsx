@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Role } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { getAppointment } from "@/lib/repos/appointments";
 import { listMetricTypes } from "@/lib/repos/metric-types";
@@ -10,6 +11,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function AppointmentDetailPage({ params }: Props) {
   const actor = await getSessionActor();
+  const t = await getTranslations("appointments.detail");
   const { id } = await params;
   const [appointment, metricTypes] = await Promise.all([
     getAppointment(actor, id),
@@ -24,9 +26,9 @@ export default async function AppointmentDetailPage({ params }: Props) {
     <main className="mx-auto max-w-4xl p-6 space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Appointment</h1>
+          <h1 className="text-2xl font-semibold">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Doctor: {appointment.doctor.displayName} ·{" "}
+            {t("doctor")}: {appointment.doctor.displayName} ·{" "}
             {new Date(appointment.scheduledAt).toLocaleString()}
           </p>
         </div>

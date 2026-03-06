@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export function LogMeasurementForm({ metricTypes }: Props) {
+  const t = useTranslations("patient.measurements.form");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function LogMeasurementForm({ metricTypes }: Props) {
     return `${year}-${month}-${day}`;
   }, [measuredDate]);
 
-  const selectedType = metricTypes.find((t) => t.id === metricTypeId);
+  const selectedType = metricTypes.find((mt) => mt.id === metricTypeId);
 
   async function onSubmit(formData: FormData) {
     setSaving(true);
@@ -54,9 +56,9 @@ export function LogMeasurementForm({ metricTypes }: Props) {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      setError(data.error ?? "Unable to save measurement");
+      setError(data.error ?? t("failedSave"));
     } else {
-      setSuccess("Measurement saved");
+      setSuccess(t("saved"));
     }
 
     setSaving(false);
@@ -65,8 +67,8 @@ export function LogMeasurementForm({ metricTypes }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Track measurements</CardTitle>
-        <CardDescription>Log your measurements and keep your care team updated.</CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -76,43 +78,43 @@ export function LogMeasurementForm({ metricTypes }: Props) {
           }}
         >
           <label className="grid gap-1 text-sm">
-            Date
+            {t("date")}
             <DatePicker
               value={measuredDate}
               onChange={setMeasuredDate}
-              placeholder="Pick measurement date"
+              placeholder={t("datePlaceholder")}
             />
             <input type="hidden" name="measuredAt" value={measuredAtValue} />
           </label>
 
           <label className="grid gap-1 text-sm">
-            Metric type
+            {t("metricType")}
             <select
               name="metricTypeId"
               value={metricTypeId}
               onChange={(e) => setMetricTypeId(e.target.value)}
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              {metricTypes.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}{t.unit ? ` (${t.unit})` : ""}
+              {metricTypes.map((mt) => (
+                <option key={mt.id} value={mt.id}>
+                  {mt.name}{mt.unit ? ` (${mt.unit})` : ""}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="grid gap-1 text-sm">
-            Value{selectedType?.unit ? ` (${selectedType.unit})` : ""}
+            {t("value")}{selectedType?.unit ? ` (${selectedType.unit})` : ""}
             <Input name="value" type="number" step="0.01" required />
           </label>
 
           <label className="grid gap-1 text-sm">
-            Notes
+            {t("notes")}
             <Textarea name="notes" />
           </label>
 
           <Button disabled={saving || !measuredAtValue || !metricTypeId}>
-            {saving ? "Saving measurement..." : "Save measurement"}
+            {saving ? t("saving") : t("save")}
           </Button>
           {success ? <p className="text-sm text-emerald-600">{success}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}

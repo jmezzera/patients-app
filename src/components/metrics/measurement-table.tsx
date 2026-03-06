@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,22 +26,23 @@ type Props = {
   showAppointmentLinks?: boolean;
 };
 
-export function MeasurementTable({ rows, showAppointmentLinks = false }: Props) {
+export async function MeasurementTable({ rows, showAppointmentLinks = false }: Props) {
+  const t = await getTranslations("patient.measurements.table");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Measurements</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Metric</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Source</TableHead>
-              {showAppointmentLinks ? <TableHead>Appointment</TableHead> : null}
-              <TableHead>Notes</TableHead>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("metric")}</TableHead>
+              <TableHead>{t("value")}</TableHead>
+              <TableHead>{t("source")}</TableHead>
+              {showAppointmentLinks ? <TableHead>{t("appointment")}</TableHead> : null}
+              <TableHead>{t("notes")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -54,14 +56,14 @@ export function MeasurementTable({ rows, showAppointmentLinks = false }: Props) 
                 </TableCell>
                 <TableCell>
                   <Badge variant={row.source === "patient_self" ? "secondary" : "outline"}>
-                    {row.source === "patient_self" ? "Self" : "Doctor"}
+                    {row.source === "patient_self" ? t("self") : t("doctor")}
                   </Badge>
                 </TableCell>
                 {showAppointmentLinks ? (
                   <TableCell>
                     {row.appointmentId ? (
                       <Link className="underline" href={`/appointments/${row.appointmentId}`}>
-                        View
+                        {t("view")}
                       </Link>
                     ) : (
                       "—"

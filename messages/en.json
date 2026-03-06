@@ -1,0 +1,284 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "appointments": "Appointments",
+    "stats": "Stats",
+    "availability": "Availability",
+    "metrics": "Metrics",
+    "nutritionPlans": "Nutrition plans",
+    "myProfile": "My profile",
+    "measurements": "Measurements",
+    "trends": "Trends",
+    "signIn": "Sign in",
+    "createAccount": "Create account"
+  },
+  "locale": {
+    "label": "Language"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "delete": "Delete",
+    "open": "Open",
+    "loading": "Loading…",
+    "noData": "No data.",
+    "linkedAppointment": "Linked appointment",
+    "refresh": "Refresh",
+    "saving": "Saving...",
+    "saved": "Saved!",
+    "creating": "Creating...",
+    "remove": "Remove",
+    "add": "Add",
+    "to": "to",
+    "view": "View",
+    "noneOption": "— None —",
+    "status": {
+      "booked": "Booked",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Snapshot of patient activity and care progress.",
+    "nav": {
+      "workspace": "Workspace",
+      "clinicalRecords": "Clinical records"
+    },
+    "stats": {
+      "totalPatients": "Total patients",
+      "appointmentsCompleted": "Appointments completed",
+      "measurementsLogged": "Measurements logged",
+      "completedAppointments": "Completed appointments",
+      "upcomingAppointments": "Upcoming appointments",
+      "averageMetrics": "Average metrics"
+    },
+    "recentAppointments": {
+      "title": "Recent appointments",
+      "description": "Latest scheduled patient visits",
+      "patient": "Patient",
+      "date": "Date",
+      "status": "Status",
+      "openAll": "Open all patient records"
+    }
+  },
+  "patients": {
+    "title": "Patients",
+    "addPatient": "Add patient",
+    "noPatients": "No patients yet.",
+    "subtitle": "{count} active profiles in your clinic workspace.",
+    "noDoctorAssigned": "No doctor assigned",
+    "form": {
+      "title": "New patient",
+      "button": "New patient",
+      "firstName": "First name *",
+      "lastName": "Last name *",
+      "phone": "Phone",
+      "dob": "Date of birth",
+      "assignedDoctor": "Assigned doctor",
+      "nutritionPlan": "Nutrition plan",
+      "clinicalSummary": "Clinical summary",
+      "creating": "Creating...",
+      "createPatient": "Create patient",
+      "failedCreate": "Failed to create patient"
+    },
+    "detail": {
+      "title": "Patient detail",
+      "updateRecord": "Update patient record",
+      "appointmentCalendar": "Appointment calendar",
+      "appointments": "Appointments",
+      "publicNotes": "Public notes",
+      "internalNotes": "Internal notes",
+      "uploadedFiles": "Uploaded files",
+      "metricSnapshot": "Metric snapshot",
+      "historicTrends": "Historic trends",
+      "noAppointments": "No appointments yet.",
+      "noPublicNotes": "No public notes.",
+      "noInternalNotes": "No internal notes.",
+      "noFiles": "No files uploaded.",
+      "updateForm": {
+        "phone": "Phone",
+        "assignedDoctor": "Assigned doctor",
+        "nutritionPlan": "Nutrition plan",
+        "color": "Patient colour",
+        "clinicalSummary": "Clinical summary",
+        "saving": "Saving...",
+        "updateRecord": "Update record",
+        "patientRecordUpdated": "Patient record updated",
+        "failedUpdate": "Unable to update patient record"
+      },
+      "noteForm": {
+        "placeholder": "Add a note about this patient...",
+        "visibleToPatient": "Visible to patient",
+        "addNote": "Add note"
+      }
+    }
+  },
+  "appointments": {
+    "title": "Appointments",
+    "newAppointment": "New appointment",
+    "noAppointments": "No appointments.",
+    "calendarTitle": "Appointments calendar",
+    "tableHeaders": {
+      "patients": "Patient(s)",
+      "doctor": "Doctor",
+      "scheduled": "Scheduled",
+      "status": "Status"
+    },
+    "form": {
+      "title": "New appointment",
+      "button": "New appointment",
+      "doctor": "Doctor",
+      "patients": "Patients (select one or more)",
+      "dateAndTime": "Date and time",
+      "creating": "Creating...",
+      "createAppointment": "Create appointment",
+      "failedCreate": "Failed to create appointment"
+    },
+    "detail": {
+      "title": "Appointment",
+      "doctor": "Doctor",
+      "metrics": "Metrics",
+      "noMetrics": "No metrics recorded.",
+      "notes": "Notes",
+      "noNotes": "No notes yet.",
+      "files": "Files",
+      "noFiles": "No files uploaded.",
+      "public": "Public",
+      "internal": "Internal",
+      "markCompleted": "Mark completed",
+      "cancel": "Cancel"
+    }
+  },
+  "stats": {
+    "title": "Stats",
+    "subtitle": "Appointment volume and patient trends over the selected period.",
+    "dateRange": {
+      "from": "From",
+      "to": "To",
+      "doctor": "Doctor",
+      "allDoctors": "All doctors"
+    },
+    "cards": {
+      "totalAppointments": "Total appointments",
+      "completed": "Completed",
+      "completionRate": "Completion rate",
+      "totalPatients": "Total patients"
+    },
+    "chart": {
+      "title": "Appointment volume",
+      "description": "Weekly appointments over the selected period",
+      "noData": "No data for this period."
+    },
+    "series": {
+      "total": "Total",
+      "completed": "Completed"
+    }
+  },
+  "availability": {
+    "title": "Availability",
+    "subtitle": "Set your weekly working hours and block off unavailable times.",
+    "workingHours": {
+      "title": "Weekly working hours",
+      "to": "to",
+      "off": "Off",
+      "saveSchedule": "Save schedule",
+      "saving": "Saving...",
+      "saved": "Saved!"
+    },
+    "blocks": {
+      "title": "Blocked times",
+      "from": "From",
+      "to": "To",
+      "reasonPlaceholder": "Reason (optional)",
+      "addBlock": "Add block",
+      "noBlocks": "No upcoming blocks.",
+      "remove": "Remove"
+    },
+    "days": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    }
+  },
+  "metricTypes": {
+    "title": "Metric types",
+    "subtitle": "Define the measurement types used for patient tracking.",
+    "namePlaceholder": "Name (e.g. Weight)",
+    "unitPlaceholder": "Unit (e.g. kg)",
+    "doctorOnly": "Doctor-only (hidden from patients)",
+    "doctorOnlyBadge": "Doctor only",
+    "addMetricType": "Add metric type",
+    "noMetricTypes": "No metric types yet."
+  },
+  "nutritionPlans": {
+    "title": "Nutrition plans",
+    "subtitle": "Manage the nutrition plans available to assign to patients.",
+    "plans": "Plans",
+    "planNamePlaceholder": "Plan name",
+    "add": "Add",
+    "noPlans": "No nutrition plans yet."
+  },
+  "patient": {
+    "myProfile": "My profile",
+    "profile": {
+      "title": "Patient profile",
+      "name": "Name",
+      "phone": "Phone",
+      "assignedDoctor": "Assigned doctor",
+      "nutritionPlan": "Nutrition plan",
+      "clinicalSummary": "Clinical summary"
+    },
+    "me": {
+      "title": "My profile",
+      "subtitle": "Personal details and nutrition goals shared with your care team.",
+      "internalTitle": "My profile",
+      "internalSubtitle": "Internal users don't have a profile yet.",
+      "myAppointments": "My appointments",
+      "noAppointments": "No appointments.",
+      "notesFromDoctor": "Notes from your doctor",
+      "viewTrends": "View measurement trends →"
+    },
+    "measurements": {
+      "title": "My measurements",
+      "table": {
+        "title": "Measurements",
+        "date": "Date",
+        "metric": "Metric",
+        "value": "Value",
+        "source": "Source",
+        "appointment": "Appointment",
+        "notes": "Notes",
+        "self": "Self",
+        "doctor": "Doctor",
+        "view": "View"
+      },
+      "form": {
+        "title": "Track measurements",
+        "description": "Log your measurements and keep your care team updated.",
+        "date": "Date",
+        "datePlaceholder": "Pick measurement date",
+        "metricType": "Metric type",
+        "value": "Value",
+        "notes": "Notes",
+        "saving": "Saving measurement...",
+        "save": "Save measurement",
+        "saved": "Measurement saved",
+        "failedSave": "Unable to save measurement"
+      }
+    },
+    "trends": {
+      "title": "My trends",
+      "subtitle": "Historical measurements over time.",
+      "metricSnapshot": "Metric snapshot",
+      "historicTrends": "Historic trends"
+    }
+  }
+}

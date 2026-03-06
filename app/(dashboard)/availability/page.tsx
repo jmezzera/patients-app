@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { getWorkingHours, listCalendarBlocks } from "@/lib/repos/availability";
 import { WorkingHoursForm } from "@/components/availability/working-hours-form";
@@ -7,6 +8,7 @@ import { CalendarBlocksPanel } from "@/components/availability/calendar-blocks-p
 
 export default async function AvailabilityPage() {
   const actor = await getSessionActor();
+  const t = await getTranslations("availability");
 
   if (actor.role !== Role.DOCTOR) {
     notFound();
@@ -20,10 +22,8 @@ export default async function AvailabilityPage() {
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-6 py-10">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Availability</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Set your weekly working hours and block off unavailable times.
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
       <WorkingHoursForm doctorId={actor.id} initialHours={workingHours} />
       <CalendarBlocksPanel blocks={blocks} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,8 @@ type Props = {
 
 export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Props) {
   const router = useRouter();
+  const t = useTranslations("appointments.form");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +55,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to create appointment");
+      setError(data.error ?? t("failedCreate"));
       return;
     }
 
@@ -63,17 +66,17 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
   }
 
   if (!open) {
-    return <Button onClick={() => setOpen(true)}>New appointment</Button>;
+    return <Button onClick={() => setOpen(true)}>{t("button")}</Button>;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>New appointment</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <label className="grid gap-1 text-sm">
-          Doctor
+          {t("doctor")}
           <select
             value={doctorId}
             onChange={(e) => setDoctorId(e.target.value)}
@@ -86,7 +89,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
         </label>
 
         <fieldset className="grid gap-1 text-sm">
-          <legend className="mb-1">Patients (select one or more)</legend>
+          <legend className="mb-1">{t("patients")}</legend>
           <div className="max-h-48 overflow-y-auto space-y-1 rounded-md border p-2">
             {patients.map((p) => (
               <label key={p.id} className="flex items-center gap-2">
@@ -102,7 +105,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
         </fieldset>
 
         <label className="grid gap-1 text-sm">
-          Date and time
+          {t("dateAndTime")}
           <Input
             type="datetime-local"
             value={scheduledAt}
@@ -116,10 +119,10 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
             onClick={submit}
             disabled={saving || !scheduledAt || selectedPatientIds.length === 0 || !doctorId}
           >
-            {saving ? "Creating..." : "Create appointment"}
+            {saving ? t("creating") : t("createAppointment")}
           </Button>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {tc("cancel")}
           </Button>
         </div>
       </CardContent>

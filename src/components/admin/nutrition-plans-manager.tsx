@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,8 @@ type Props = { plans: Plan[] };
 
 export function NutritionPlansManager({ plans: initialPlans }: Props) {
   const router = useRouter();
+  const t = useTranslations("nutritionPlans");
+  const tc = useTranslations("common");
   const [plans, setPlans] = useState(initialPlans);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -41,22 +44,22 @@ export function NutritionPlansManager({ plans: initialPlans }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Plans</CardTitle>
+        <CardTitle>{t("plans")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Input
-            placeholder="Plan name"
+            placeholder={t("planNamePlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && create()}
           />
           <Button onClick={create} disabled={saving || !name.trim()}>
-            Add
+            {t("add")}
           </Button>
         </div>
         {plans.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No nutrition plans yet.</p>
+          <p className="text-sm text-muted-foreground">{t("noPlans")}</p>
         ) : (
           <ul className="space-y-2">
             {plans.map((plan) => (
@@ -68,7 +71,7 @@ export function NutritionPlansManager({ plans: initialPlans }: Props) {
                   className="text-red-600 hover:text-red-700"
                   onClick={() => remove(plan.id)}
                 >
-                  Delete
+                  {tc("delete")}
                 </Button>
               </li>
             ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ function toDateStr(d: Date) {
 }
 
 export function StatsView({ initial, isManager }: Props) {
+  const t = useTranslations("stats");
+  const tc = useTranslations("common");
   const defaultTo = new Date();
   const defaultFrom = new Date();
   defaultFrom.setDate(defaultTo.getDate() - 90);
@@ -74,7 +77,7 @@ export function StatsView({ initial, isManager }: Props) {
         <CardContent className="pt-4">
           <div className="flex flex-wrap items-end gap-3">
             <label className="grid gap-1 text-sm">
-              From
+              {t("dateRange.from")}
               <Input
                 type="date"
                 value={from}
@@ -83,7 +86,7 @@ export function StatsView({ initial, isManager }: Props) {
               />
             </label>
             <label className="grid gap-1 text-sm">
-              To
+              {t("dateRange.to")}
               <Input
                 type="date"
                 value={to}
@@ -93,13 +96,13 @@ export function StatsView({ initial, isManager }: Props) {
             </label>
             {isManager && doctors.length > 0 && (
               <label className="grid gap-1 text-sm">
-                Doctor
+                {t("dateRange.doctor")}
                 <select
                   value={doctorId}
                   onChange={(e) => setDoctorId(e.target.value)}
                   className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                 >
-                  <option value="">All doctors</option>
+                  <option value="">{t("dateRange.allDoctors")}</option>
                   {doctors.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.displayName}
@@ -109,7 +112,7 @@ export function StatsView({ initial, isManager }: Props) {
               </label>
             )}
             <Button variant="outline" onClick={fetchStats} disabled={loading}>
-              {loading ? "Loading..." : "Refresh"}
+              {loading ? tc("loading") : tc("refresh")}
             </Button>
           </div>
         </CardContent>
@@ -118,25 +121,25 @@ export function StatsView({ initial, isManager }: Props) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total appointments</CardDescription>
+            <CardDescription>{t("cards.totalAppointments")}</CardDescription>
             <CardTitle className="text-3xl">{appointmentStats.total}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Completed</CardDescription>
+            <CardDescription>{t("cards.completed")}</CardDescription>
             <CardTitle className="text-3xl">{appointmentStats.completed}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Completion rate</CardDescription>
+            <CardDescription>{t("cards.completionRate")}</CardDescription>
             <CardTitle className="text-3xl">{completionRate}%</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total patients</CardDescription>
+            <CardDescription>{t("cards.totalPatients")}</CardDescription>
             <CardTitle className="text-3xl">{patientStats.total}</CardTitle>
           </CardHeader>
         </Card>
@@ -144,12 +147,12 @@ export function StatsView({ initial, isManager }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Appointment volume</CardTitle>
-          <CardDescription>Weekly appointments over the selected period</CardDescription>
+          <CardTitle>{t("chart.title")}</CardTitle>
+          <CardDescription>{t("chart.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           {timeSeries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No data for this period.</p>
+            <p className="text-sm text-muted-foreground">{t("chart.noData")}</p>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={timeSeries}>
@@ -161,7 +164,7 @@ export function StatsView({ initial, isManager }: Props) {
                 <Line
                   type="monotone"
                   dataKey="total"
-                  name="Total"
+                  name={t("series.total")}
                   stroke="#6366f1"
                   strokeWidth={2}
                   dot={false}
@@ -169,7 +172,7 @@ export function StatsView({ initial, isManager }: Props) {
                 <Line
                   type="monotone"
                   dataKey="completed"
-                  name="Completed"
+                  name={t("series.completed")}
                   stroke="#22c55e"
                   strokeWidth={2}
                   dot={false}

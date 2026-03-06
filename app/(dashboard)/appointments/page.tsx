@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppointmentStatus, Role } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { listAppointments } from "@/lib/repos/appointments";
 import { listPatients } from "@/lib/repos/patients";
@@ -17,11 +18,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-function statusBadge(status: AppointmentStatus) {
-  if (status === AppointmentStatus.COMPLETED) return <Badge>Completed</Badge>;
+function statusBadge(status: AppointmentStatus, labels: { completed: string; cancelled: string; booked: string }) {
+  if (status === AppointmentStatus.COMPLETED) return <Badge>{labels.completed}</Badge>;
   if (status === AppointmentStatus.CANCELLED)
-    return <Badge className="border-red-300 bg-red-100 text-red-700">Cancelled</Badge>;
-  return <Badge variant="outline">Booked</Badge>;
+    return <Badge className="border-red-300 bg-red-100 text-red-700">{labels.cancelled}</Badge>;
+  return <Badge variant="outline">{labels.booked}</Badge>;
 }
 
 function PatientCell({
@@ -47,6 +48,8 @@ function PatientCell({
 
 export default async function AppointmentsPage() {
   const actor = await getSessionActor();
+  const t = await getTranslations("appointments");
+  const tc = await getTranslations("common");
 
   const [appointments, patients, doctors] = await Promise.all([
     listAppointments(actor),
@@ -72,10 +75,10 @@ export default async function AppointmentsPage() {
 
   return (
     <main className="container space-y-4 py-8">
-      <AppointmentsCalendar title="Appointments calendar" appointments={calendarRows} />
+      <AppointmentsCalendar title={t("calendarTitle")} appointments={calendarRows} />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Appointments</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
           <CreateAppointmentForm
             patients={patients}
             doctors={doctors}
@@ -86,10 +89,10 @@ export default async function AppointmentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Patient(s)</TableHead>
-                <TableHead>Doctor</TableHead>
-                <TableHead>Scheduled</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t("tableHeaders.patients")}</TableHead>
+                <TableHead>{t("tableHeaders.doctor")}</TableHead>
+                <TableHead>{t("tableHeaders.scheduled")}</TableHead>
+                <TableHead>{t("tableHeaders.status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -102,7 +105,7 @@ export default async function AppointmentsPage() {
                   </TableCell>
                   <TableCell>{a.doctor.displayName}</TableCell>
                   <TableCell>{new Date(a.scheduledAt).toLocaleString()}</TableCell>
-                  <TableCell>{statusBadge(a.status)}</TableCell>
+                  <TableCell>{statusBadge(a.status, { completed: tc("status.completed"), cancelled: tc("status.cancelled"), booked: tc("status.booked") })}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

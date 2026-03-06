@@ -352,6 +352,110 @@ async function main() {
     },
   });
 
+  // ── Detailed showcase patient: Sofia Andrade (2 years of data) ──────────────
+  const sofiaUser = await prisma.user.create({
+    data: {
+      clerkId: "clerk_sofia_seed",
+      orgId,
+      role: Role.PATIENT,
+      email: "sofia.andrade@jami.app",
+      displayName: "Sofia Andrade",
+    },
+  });
+  const sofia = await prisma.patient.create({
+    data: {
+      orgId,
+      userId: sofiaUser.id,
+      assignedDoctorId: doctor.id,
+      nutritionPlanId: plans[0].id, // Weight Loss
+      firstName: "Sofia",
+      lastName: "Andrade",
+      sex: Sex.FEMALE,
+      phone: "+55 11 99999-0001",
+      color: "#a855f7",
+      clinicalSummary:
+        "Two-year weight-loss program. Excellent adherence. Started at 102 kg, target 82 kg. Ongoing monthly follow-up.",
+      dob: new Date(1989, 3, 12),
+    },
+  });
+
+  // Sofia's trajectory: 24 months, weight 102 → 84 kg, fat 38 → 24%, waist 112 → 90 cm
+  // HR 78 → 62 bpm (improving fitness), sleep 55 → 82 pts, hunger 8 → 3 pts
+  const sofiaAppts: Awaited<ReturnType<typeof prisma.appointment.create>>[] = [];
+  const MONTHS = 24;
+
+  for (let m = 0; m < MONTHS; m++) {
+    const daysBack = (MONTHS - m) * 30 - 5; // oldest first
+    const progress = m / (MONTHS - 1); // 0 → 1
+
+    const scheduledAt = daysAgo(daysBack, 10);
+    const isPast = scheduledAt < new Date();
+    const status = isPast ? AppointmentStatus.COMPLETED : AppointmentStatus.BOOKED;
+
+    const appt = await prisma.appointment.create({
+      data: {
+        orgId,
+        doctorId: doctor.id,
+        status,
+        scheduledAt,
+        completedAt: isPast ? scheduledAt : null,
+        participants: { create: { patientId: sofia.id } },
+      },
+    });
+    sofiaAppts.push(appt);
+
+    if (!isPast) continue;
+
+    // Doctor measurements at each appointment (all 6 metrics)
+    const drWeight  = jitter(102 - progress * 18, 0.4);
+    const drFat     = jitter(38  - progress * 14, 0.3);
+    const drWaist   = jitter(112 - progress * 22, 0.6);
+    const drHR      = jitter(78  - progress * 16, 1.5);
+    const drSleep   = jitter(55  + progress * 27, 2.0);
+    const drHunger  = jitter(8   - progress * 5,  0.5);
+
+    await prisma.measurementEntry.createMany({
+      data: [
+        { orgId, patientId: sofia.id, recorderUserId: doctor.id, appointmentId: appt.id, metricTypeId: mtWeight.id,  source: "doctor_visit", measuredAt: scheduledAt, value: drWeight, notes: "Clinic scale" },
+        { orgId, patientId: sofia.id, recorderUserId: doctor.id, appointmentId: appt.id, metricTypeId: mtBodyFat.id, source: "doctor_visit", measuredAt: scheduledAt, value: drFat,    notes: null },
+        { orgId, patientId: sofia.id, recorderUserId: doctor.id, appointmentId: appt.id, metricTypeId: mtWaist.id,   source: "doctor_visit", measuredAt: scheduledAt, value: drWaist,  notes: null },
+        { orgId, patientId: sofia.id, recorderUserId: doctor.id, appointmentId: appt.id, metricTypeId: mtHR.id,      source: "doctor_visit", measuredAt: scheduledAt, value: drHR,     notes: null },
+        { orgId, patientId: sofia.id, recorderUserId: doctor.id, appointmentId: appt.id, metricTypeId: mtSleep.id,   source: "doctor_visit", measuredAt: scheduledAt, value: drSleep,  notes: null },
+        { orgId, patientId: sofia.id, recorderUserId: doctor.id, appointmentId: appt.id, metricTypeId: mtHunger.id,  source: "doctor_visit", measuredAt: scheduledAt, value: drHunger, notes: null },
+      ],
+    });
+
+    // Doctor note every appointment
+    if (m % 3 === 0) {
+      await prisma.note.create({
+        data: {
+          orgId, patientId: sofia.id, appointmentId: appt.id, authorId: doctor.id,
+          isPublic: true,
+          content: m === 0
+            ? "Initial consultation. Setting baseline metrics, starting Weight Loss protocol."
+            : `Month ${m} review. Weight loss on track. Continue current plan and maintain activity level.`,
+        },
+      });
+    }
+  }
+
+  // Sofia's self-measurements: every ~14 days for the past 2 years (weight, fat, waist only)
+  const selfDays = MONTHS * 30;
+  for (let d = selfDays; d > 0; d -= 14) {
+    const progress = 1 - d / selfDays;
+    const measuredAt = daysAgo(d, 7 + Math.floor(Math.random() * 4));
+    const sWeight = jitter(102 - progress * 18, 1.2);
+    const sFat    = jitter(38  - progress * 14, 0.8);
+    const sWaist  = jitter(112 - progress * 22, 1.5);
+    await prisma.measurementEntry.createMany({
+      data: [
+        { orgId, patientId: sofia.id, recorderUserId: sofiaUser.id, metricTypeId: mtWeight.id,  source: "patient_self", measuredAt, value: sWeight, notes: "Home scale" },
+        { orgId, patientId: sofia.id, recorderUserId: sofiaUser.id, metricTypeId: mtBodyFat.id, source: "patient_self", measuredAt, value: sFat,    notes: null },
+        { orgId, patientId: sofia.id, recorderUserId: sofiaUser.id, metricTypeId: mtWaist.id,   source: "patient_self", measuredAt, value: sWaist,  notes: null },
+      ],
+    });
+  }
+
   console.log("✓ Seed complete", {
     manager: manager.email,
     doctor: doctor.email,

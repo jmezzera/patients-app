@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Role, AppointmentStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import type { Route } from "next";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { listPatients } from "@/lib/repos/patients";
@@ -20,13 +21,6 @@ import {
 
 const signInRoute = "/sign-in" as Route;
 
-function appointmentStatusBadge(status: AppointmentStatus) {
-  if (status === AppointmentStatus.COMPLETED) return <Badge>Completed</Badge>;
-  if (status === AppointmentStatus.CANCELLED)
-    return <Badge className="border-red-300 bg-red-100 text-red-700">Cancelled</Badge>;
-  return <Badge variant="secondary">Booked</Badge>;
-}
-
 export default async function DashboardPage() {
   const { userId } = await auth();
 
@@ -35,6 +29,19 @@ export default async function DashboardPage() {
   }
 
   try {
+    const [t, tn, tc] = await Promise.all([
+      getTranslations("dashboard"),
+      getTranslations("nav"),
+      getTranslations("common"),
+    ]);
+
+    function appointmentStatusBadge(status: AppointmentStatus) {
+      if (status === AppointmentStatus.COMPLETED) return <Badge>{tc("status.completed")}</Badge>;
+      if (status === AppointmentStatus.CANCELLED)
+        return <Badge className="border-red-300 bg-red-100 text-red-700">{tc("status.cancelled")}</Badge>;
+      return <Badge variant="secondary">{tc("status.booked")}</Badge>;
+    }
+
     const actor = await getSessionActor();
     if (actor.role === Role.PATIENT) {
       redirect("/me");
@@ -74,39 +81,39 @@ export default async function DashboardPage() {
         <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
           <Card className="h-fit">
             <CardHeader>
-              <CardTitle className="text-base">Workspace</CardTitle>
-              <CardDescription>Clinical records</CardDescription>
+              <CardTitle className="text-base">{t("nav.workspace")}</CardTitle>
+              <CardDescription>{t("nav.clinicalRecords")}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
               <Button variant="secondary" className="justify-start">
-                Dashboard
+                {t("title")}
               </Button>
               <Button asChild variant="ghost" className="justify-start">
-                <a href="/patients">Patients</a>
+                <a href="/patients">{tn("patients")}</a>
               </Button>
               <Button asChild variant="ghost" className="justify-start">
-                <a href="/appointments">Appointments</a>
+                <a href="/appointments">{tn("appointments")}</a>
               </Button>
               <Button asChild variant="ghost" className="justify-start">
-                <a href="/stats">Stats</a>
+                <a href="/stats">{tn("stats")}</a>
               </Button>
               {actor.role === Role.DOCTOR && (
                 <>
                   <Button asChild variant="ghost" className="justify-start">
-                    <a href="/availability">Availability</a>
+                    <a href="/availability">{tn("availability")}</a>
                   </Button>
                   <Button asChild variant="ghost" className="justify-start">
-                    <a href="/metric-types">Metric types</a>
+                    <a href="/metric-types">{tn("metrics")}</a>
                   </Button>
                 </>
               )}
               {actor.role === Role.MANAGER && (
                 <>
                   <Button asChild variant="ghost" className="justify-start">
-                    <a href="/nutrition-plans">Nutrition plans</a>
+                    <a href="/nutrition-plans">{tn("nutritionPlans")}</a>
                   </Button>
                   <Button asChild variant="ghost" className="justify-start">
-                    <a href="/metric-types">Metric types</a>
+                    <a href="/metric-types">{tn("metrics")}</a>
                   </Button>
                 </>
               )}
@@ -116,10 +123,8 @@ export default async function DashboardPage() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-                <p className="text-sm text-muted-foreground">
-                  Snapshot of patient activity and care progress.
-                </p>
+                <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
+                <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
               </div>
               <Badge variant="secondary">{actor.role.toLowerCase()}</Badge>
             </div>
@@ -127,13 +132,13 @@ export default async function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total patients</CardDescription>
+                  <CardDescription>{t("stats.totalPatients")}</CardDescription>
                   <CardTitle className="text-3xl">{patients.length}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Appointments completed</CardDescription>
+                  <CardDescription>{t("stats.appointmentsCompleted")}</CardDescription>
                   <CardTitle className="text-3xl">
                     {completedAppointments}/{totalAppointments}
                   </CardTitle>
@@ -141,7 +146,7 @@ export default async function DashboardPage() {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Measurements logged</CardDescription>
+                  <CardDescription>{t("stats.measurementsLogged")}</CardDescription>
                   <CardTitle className="text-3xl">{measurementCount}</CardTitle>
                 </CardHeader>
               </Card>
@@ -149,16 +154,16 @@ export default async function DashboardPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Recent appointments</CardTitle>
-                <CardDescription>Latest scheduled patient visits</CardDescription>
+                <CardTitle>{t("recentAppointments.title")}</CardTitle>
+                <CardDescription>{t("recentAppointments.description")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Patient</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t("recentAppointments.patient")}</TableHead>
+                      <TableHead>{t("recentAppointments.date")}</TableHead>
+                      <TableHead>{t("recentAppointments.status")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -185,7 +190,7 @@ export default async function DashboardPage() {
                 </Table>
                 <Separator className="my-4" />
                 <Button asChild variant="outline">
-                  <a href="/patients">Open all patient records</a>
+                  <a href="/patients">{t("recentAppointments.openAll")}</a>
                 </Button>
               </CardContent>
             </Card>

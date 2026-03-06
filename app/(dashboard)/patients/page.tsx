@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Role } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { listPatients } from "@/lib/repos/patients";
 import { listNutritionPlans } from "@/lib/repos/nutrition-plans";
@@ -8,6 +9,7 @@ import { CreatePatientForm } from "@/components/forms/create-patient-form";
 
 export default async function PatientsPage() {
   const actor = await getSessionActor();
+  const t = await getTranslations("patients");
 
   const [patients, nutritionPlans, doctors] = await Promise.all([
     listPatients(actor),
@@ -23,9 +25,9 @@ export default async function PatientsPage() {
     <main className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Patients</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {patients.length} active profiles in your clinic workspace.
+            {t("subtitle", { count: patients.length })}
           </p>
         </div>
         <CreatePatientForm doctors={doctors} nutritionPlans={nutritionPlans} />
@@ -48,7 +50,7 @@ export default async function PatientsPage() {
               {patient.firstName} {patient.lastName}
             </Link>
             <p className="mt-1 text-sm text-muted-foreground">
-              {patient.assignedDoctor?.displayName ?? "No doctor assigned"}
+              {patient.assignedDoctor?.displayName ?? t("noDoctorAssigned")}
               {patient.nutritionPlan ? ` · ${patient.nutritionPlan.name}` : ""}
             </p>
           </li>

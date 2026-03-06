@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 type WorkingHour = { dayOfWeek: number; startTime: string; endTime: string };
 type Props = { doctorId: string; initialHours: WorkingHour[] };
@@ -15,6 +14,7 @@ function blankSchedule(): WorkingHour[] {
 }
 
 export function WorkingHoursForm({ doctorId, initialHours }: Props) {
+  const t = useTranslations("availability");
   const [hours, setHours] = useState<WorkingHour[]>(
     initialHours.length > 0 ? initialHours : blankSchedule(),
   );
@@ -52,10 +52,10 @@ export function WorkingHoursForm({ doctorId, initialHours }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Weekly working hours</CardTitle>
+        <CardTitle>{t("workingHours.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {DAYS.map((dayName, idx) => {
+        {([0, 1, 2, 3, 4, 5, 6] as const).map((idx) => {
           const entry = hours.find((h) => h.dayOfWeek === idx);
           return (
             <div key={idx} className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export function WorkingHoursForm({ doctorId, initialHours }: Props) {
                   checked={!!entry}
                   onChange={() => toggle(idx)}
                 />
-                {dayName}
+                {t(`days.${idx}`)}
               </label>
               {entry ? (
                 <>
@@ -75,7 +75,7 @@ export function WorkingHoursForm({ doctorId, initialHours }: Props) {
                     onChange={(e) => update(idx, "startTime", e.target.value)}
                     className="w-32"
                   />
-                  <span className="text-sm text-muted-foreground">to</span>
+                  <span className="text-sm text-muted-foreground">{t("workingHours.to")}</span>
                   <Input
                     type="time"
                     value={entry.endTime}
@@ -84,13 +84,13 @@ export function WorkingHoursForm({ doctorId, initialHours }: Props) {
                   />
                 </>
               ) : (
-                <span className="text-sm text-muted-foreground">Off</span>
+                <span className="text-sm text-muted-foreground">{t("workingHours.off")}</span>
               )}
             </div>
           );
         })}
         <Button onClick={save} disabled={saving}>
-          {saved ? "Saved!" : saving ? "Saving..." : "Save schedule"}
+          {saved ? t("workingHours.saved") : saving ? t("workingHours.saving") : t("workingHours.saveSchedule")}
         </Button>
       </CardContent>
     </Card>

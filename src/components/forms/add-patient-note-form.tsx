@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +10,8 @@ type Props = { patientId: string };
 
 export function AddPatientNoteForm({ patientId }: Props) {
   const router = useRouter();
+  const t = useTranslations("patients.detail.noteForm");
+  const tc = useTranslations("common");
   const [content, setContent] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,7 +34,7 @@ export function AddPatientNoteForm({ patientId }: Props) {
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Add a note about this patient..."
+        placeholder={t("placeholder")}
         rows={3}
       />
       <div className="flex items-center justify-between">
@@ -41,7 +44,7 @@ export function AddPatientNoteForm({ patientId }: Props) {
             checked={isPublic}
             onChange={(e) => setIsPublic(e.target.checked)}
           />
-          Visible to patient
+          {t("visibleToPatient")}
         </label>
         <Button
           size="sm"
@@ -49,7 +52,7 @@ export function AddPatientNoteForm({ patientId }: Props) {
           disabled={saving || !content.trim()}
           onClick={submit}
         >
-          {saving ? "Saving..." : "Add note"}
+          {saving ? tc("saving") : t("addNote")}
         </Button>
       </div>
     </div>

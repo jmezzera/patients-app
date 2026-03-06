@@ -1,4 +1,5 @@
 import { Role } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import {
   getAppointmentStats,
@@ -10,6 +11,7 @@ import { StatsView } from "@/components/stats/stats-view";
 
 export default async function StatsPage() {
   const actor = await getSessionActor();
+  const t = await getTranslations("stats");
 
   // Default: last 90 days
   const to = new Date();
@@ -26,10 +28,8 @@ export default async function StatsPage() {
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-6 py-10">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Stats</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Appointment volume and patient trends over the selected period.
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
       <StatsView
         initial={{ appointmentStats, patientStats, timeSeries, doctors }}
