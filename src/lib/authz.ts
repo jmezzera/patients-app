@@ -14,7 +14,8 @@ const DEFAULT_ORG_ID = "org_default";
 
 function parseRole(value: unknown): Role {
   if (typeof value !== "string") {
-    return Role.DOCTOR;
+    console.warn("[authz] Missing role in Clerk metadata; defaulting to PATIENT", { value });
+    return Role.PATIENT;
   }
 
   const normalized = value.toUpperCase();
@@ -24,8 +25,12 @@ function parseRole(value: unknown): Role {
   if (normalized === Role.PATIENT) {
     return Role.PATIENT;
   }
+  if (normalized === Role.DOCTOR) {
+    return Role.DOCTOR;
+  }
 
-  return Role.DOCTOR;
+  console.warn("[authz] Unrecognized role in Clerk metadata; defaulting to PATIENT", { value });
+  return Role.PATIENT;
 }
 
 async function ensureLocalUser(clerkId: string) {

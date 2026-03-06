@@ -98,6 +98,11 @@ export async function createAppointment(
     throw new Error("One or more patients not found");
   }
 
+  const doctor = await db.user.findFirst({
+    where: { id: input.doctorId, orgId: actor.orgId, role: Role.DOCTOR },
+  });
+  if (!doctor) throw new Error("Invalid doctor");
+
   const appointment = await db.appointment.create({
     data: {
       orgId: actor.orgId,
@@ -235,8 +240,25 @@ export async function addAppointmentMetrics(
 
   const appointment = await db.appointment.findFirst({
     where: { id: input.appointmentId, orgId: actor.orgId },
+    include: { participants: { select: { patientId: true } } },
   });
   if (!appointment) throw new Error("Appointment not found");
+
+  const participantIds = new Set(appointment.participants.map((p) => p.patientId));
+  for (const m of input.metrics) {
+    if (!participantIds.has(m.patientId)) {
+      throw new Error(`Patient ${m.patientId} is not a participant of this appointment`);
+    }
+  }
+
+  const uniqueMetricTypeIds = [...new Set(input.metrics.map((m) => m.metricTypeId))];
+  const foundMetricTypes = await db.metricType.findMany({
+    where: { id: { in: uniqueMetricTypeIds }, orgId: actor.orgId },
+    select: { id: true },
+  });
+  if (foundMetricTypes.length !== uniqueMetricTypeIds.length) {
+    throw new Error("One or more metric types not found");
+  }
 
   const created = await db.$transaction(
     input.metrics.map((m) =>

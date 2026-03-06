@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionActor } from "@/lib/authz";
 import { listCalendarBlocks, createCalendarBlock } from "@/lib/repos/availability";
+import { Role } from "@prisma/client";
 
 const schema = z.object({
   startsAt: z.string().min(1),
@@ -13,7 +14,9 @@ export async function GET(request: Request) {
   try {
     const actor = await getSessionActor();
     const { searchParams } = new URL(request.url);
-    const doctorId = searchParams.get("doctorId") ?? actor.id;
+    // DOCTORs can only view their own calendar blocks
+    const doctorId =
+      actor.role === Role.DOCTOR ? actor.id : (searchParams.get("doctorId") ?? actor.id);
     const blocks = await listCalendarBlocks(actor, doctorId);
     return NextResponse.json({ blocks });
   } catch (error) {

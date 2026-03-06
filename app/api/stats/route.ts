@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { getSessionActor } from "@/lib/authz";
 import {
   getAppointmentStats,
@@ -7,16 +8,26 @@ import {
   listDoctors,
 } from "@/lib/repos/stats";
 
+const querySchema = z.object({
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+});
+
 export async function GET(request: Request) {
   try {
     const actor = await getSessionActor();
     const { searchParams } = new URL(request.url);
 
-    const from = searchParams.get("from")
-      ? new Date(searchParams.get("from")!)
-      : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // default 90 days
+    const parsed = querySchema.safeParse({
+      from: searchParams.get("from") ?? undefined,
+      to: searchParams.get("to") ?? undefined,
+    });
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid date parameters" }, { status: 400 });
+    }
 
-    const to = searchParams.get("to") ? new Date(searchParams.get("to")!) : new Date();
+    const from = parsed.data.from ?? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const to = parsed.data.to ?? new Date();
 
     const doctorId = searchParams.get("doctorId") ?? undefined;
 

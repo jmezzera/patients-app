@@ -71,6 +71,13 @@ export async function updatePatientProfile(
   const before = await db.patient.findFirst({ where: { id: patientId, orgId: actor.orgId } });
   if (!before) throw new Error("Patient not found");
 
+  if (payload.assignedDoctorId) {
+    const doctor = await db.user.findFirst({
+      where: { id: payload.assignedDoctorId, orgId: actor.orgId, role: Role.DOCTOR },
+    });
+    if (!doctor) throw new Error("Invalid doctor");
+  }
+
   const after = await db.patient.update({
     where: { id: patientId },
     data: {
@@ -140,6 +147,10 @@ export async function addPatientNote(
   input: { patientId: string; content: string; isPublic: boolean },
 ) {
   assertRole(actor, [Role.DOCTOR]);
+
+  const patient = await db.patient.findFirst({ where: { id: input.patientId, orgId: actor.orgId } });
+  if (!patient) throw new Error("Patient not found");
+  if (patient.assignedDoctorId !== actor.id) throw new Error("Forbidden");
 
   const note = await db.note.create({
     data: {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionActor } from "@/lib/authz";
 import { getWorkingHours, setWorkingHours } from "@/lib/repos/availability";
+import { Role } from "@prisma/client";
 
 const schema = z.object({
   doctorId: z.string().min(1),
@@ -18,7 +19,9 @@ export async function GET(request: Request) {
   try {
     const actor = await getSessionActor();
     const { searchParams } = new URL(request.url);
-    const doctorId = searchParams.get("doctorId") ?? actor.id;
+    // DOCTORs can only view their own working hours
+    const doctorId =
+      actor.role === Role.DOCTOR ? actor.id : (searchParams.get("doctorId") ?? actor.id);
     const hours = await getWorkingHours(actor, doctorId);
     return NextResponse.json({ hours });
   } catch (error) {
