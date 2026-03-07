@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-type Patient = { id: string; firstName: string; lastName: string };
+type Patient = { id: string; firstName: string; lastName: string; color?: string | null };
 type Doctor = { id: string; displayName: string };
 
 type Props = {
@@ -20,15 +19,31 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
   const router = useRouter();
   const t = useTranslations("appointments.form");
   const tc = useTranslations("common");
+
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(
-    patients[0] ? [patients[0].id] : [],
-  );
+  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
   const [doctorId, setDoctorId] = useState(defaultDoctorId ?? doctors[0]?.id ?? "");
   const [scheduledAt, setScheduledAt] = useState("");
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") close();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    setError(null);
+    setSelectedPatientIds([]);
+    setScheduledAt("");
+    setDoctorId(defaultDoctorId ?? doctors[0]?.id ?? "");
+  }
 
   function togglePatient(id: string) {
     setSelectedPatientIds((prev) =>
@@ -44,11 +59,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
     const res = await fetch("/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        patientIds: selectedPatientIds,
-        doctorId,
-        scheduledAt,
-      }),
+      body: JSON.stringify({ patientIds: selectedPatientIds, doctorId, scheduledAt: new Date(scheduledAt).toISOString() }),
     });
 
     setSaving(false);
@@ -59,73 +70,122 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
       return;
     }
 
-    setOpen(false);
-    setSelectedPatientIds(patients[0] ? [patients[0].id] : []);
-    setScheduledAt("");
+    close();
     router.refresh();
   }
 
-  if (!open) {
-    return <Button onClick={() => setOpen(true)}>{t("button")}</Button>;
-  }
+  const canSubmit = !!scheduledAt && selectedPatientIds.length > 0 && !!doctorId;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <label className="grid gap-1 text-sm">
-          {t("doctor")}
-          <select
-            value={doctorId}
-            onChange={(e) => setDoctorId(e.target.value)}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-          >
-            {doctors.map((d) => (
-              <option key={d.id} value={d.id}>{d.displayName}</option>
-            ))}
-          </select>
-        </label>
+    <>
+      <Button size="sm" onClick={() => setOpen(true)}>
+        {t("button")}
+      </Button>
 
-        <fieldset className="grid gap-1 text-sm">
-          <legend className="mb-1">{t("patients")}</legend>
-          <div className="max-h-48 overflow-y-auto space-y-1 rounded-md border p-2">
-            {patients.map((p) => (
-              <label key={p.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectedPatientIds.includes(p.id)}
-                  onChange={() => togglePatient(p.id)}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) close(); }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border bg-background shadow-xl"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b px-5 py-4">
+              <h2 className="text-base font-semibold">{t("title")}</h2>
+              <button
+                onClick={close}
+                className="rounded-sm text-muted-foreground hover:text-foreground"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="space-y-4 px-5 py-4">
+              {/* Doctor */}
+              {doctors.length > 1 && (
+                <div className="grid gap-1.5">
+                  <label className="text-sm font-medium">{t("doctor")}</label>
+                  <select
+                    value={doctorId}
+                    onChange={(e) => setDoctorId(e.target.value)}
+                    className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {doctors.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Patients */}
+              <div className="grid gap-1.5">
+                <label className="text-sm font-medium">
+                  {t("patients")}
+                  {selectedPatientIds.length > 0 && (
+                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                      {selectedPatientIds.length} selected
+                    </span>
+                  )}
+                </label>
+                <div className="max-h-48 overflow-y-auto rounded-md border divide-y">
+                  {patients.map((p) => {
+                    const checked = selectedPatientIds.includes(p.id);
+                    return (
+                      <label
+                        key={p.id}
+                        className={`flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-muted/50 ${
+                          checked ? "bg-muted/30" : ""
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-input accent-primary"
+                          checked={checked}
+                          onChange={() => togglePatient(p.id)}
+                        />
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: p.color ?? "#cbd5e1" }}
+                        />
+                        {p.firstName} {p.lastName}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Date & time */}
+              <div className="grid gap-1.5">
+                <label className="text-sm font-medium">{t("dateAndTime")}</label>
+                <Input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
                 />
-                {p.firstName} {p.lastName}
-              </label>
-            ))}
+              </div>
+
+              {error && <p className="text-sm text-red-600">{error}</p>}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 border-t px-5 py-3">
+              <Button variant="outline" onClick={close}>
+                {tc("cancel")}
+              </Button>
+              <Button onClick={submit} disabled={saving || !canSubmit}>
+                {saving ? t("creating") : t("createAppointment")}
+              </Button>
+            </div>
           </div>
-        </fieldset>
-
-        <label className="grid gap-1 text-sm">
-          {t("dateAndTime")}
-          <Input
-            type="datetime-local"
-            value={scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
-          />
-        </label>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <div className="flex gap-2">
-          <Button
-            onClick={submit}
-            disabled={saving || !scheduledAt || selectedPatientIds.length === 0 || !doctorId}
-          >
-            {saving ? t("creating") : t("createAppointment")}
-          </Button>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            {tc("cancel")}
-          </Button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 }

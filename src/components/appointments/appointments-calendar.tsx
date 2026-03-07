@@ -1,94 +1,149 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { isSameDay } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
-type CalendarAppointment = {
-  id: string;
-  scheduledAt: Date | string;
-  completedAt?: Date | string | null;
-  label: string;
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
+import { format, parse, startOfWeek, getDay, addMinutes } from "date-fns";
+import { AppointmentStatus } from "@prisma/client";
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
+  getDay,
+  locales: {},
+});
+
+export type ViewParticipant = {
+  patientId: string;
+  firstName: string;
+  lastName: string;
+  color: string | null;
+  dob: Date | null;
+  nutritionPlanId: string | null;
+  nutritionPlanName: string | null;
 };
+
+export type ViewAppointment = {
+  id: string;
+  scheduledAt: Date;
+  completedAt: Date | null;
+  status: AppointmentStatus;
+  doctorName: string;
+  participants: ViewParticipant[];
+};
+
+type RbcEvent = {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  resource: ViewAppointment;
+};
+
+function AppointmentEvent({ event }: { event: RbcEvent }) {
+  const { resource } = event;
+  const nutritionPlanName = resource.participants[0]?.nutritionPlanName ?? null;
+  return (
+    <div className="flex items-start gap-1 overflow-hidden text-xs leading-tight">
+      <span className="flex shrink-0 flex-wrap gap-0.5 pt-0.5">
+        {resource.participants.map((p) => (
+          <span
+            key={p.patientId}
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ backgroundColor: p.color ?? "#cbd5e1" }}
+          />
+        ))}
+      </span>
+      <div className="min-w-0">
+        <div className="truncate font-medium">{event.title}</div>
+        {nutritionPlanName && (
+          <div className="truncate opacity-75">{nutritionPlanName}</div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 type Props = {
-  title: string;
-  appointments: CalendarAppointment[];
+  appointments: ViewAppointment[];
+  view?: View;
+  onViewChange?: (v: View) => void;
+  date?: Date;
+  onDateChange?: (d: Date) => void;
 };
 
-export function AppointmentsCalendar({ title, appointments }: Props) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+export function AppointmentsCalendar({
+  appointments,
+  view: viewProp,
+  onViewChange,
+  date: dateProp,
+  onDateChange,
+}: Props) {
+  const router = useRouter();
+  const [internalView, setInternalView] = useState<View>("month");
+  const [internalDate, setInternalDate] = useState(new Date());
 
-  const normalizedAppointments = useMemo(
+  const view = viewProp ?? internalView;
+  const date = dateProp ?? internalDate;
+
+  function handleViewChange(v: View) {
+    setInternalView(v);
+    onViewChange?.(v);
+  }
+
+  function handleDateChange(d: Date) {
+    setInternalDate(d);
+    onDateChange?.(d);
+  }
+
+  const events = useMemo<RbcEvent[]>(
     () =>
-      appointments.map((appointment) => ({
-        ...appointment,
-        scheduledAt: new Date(appointment.scheduledAt),
-        completedAt: appointment.completedAt ? new Date(appointment.completedAt) : null,
+      appointments.map((a) => ({
+        id: a.id,
+        title:
+          a.participants.length === 0
+            ? "—"
+            : a.participants.map((p) => `${p.firstName} ${p.lastName}`).join(", "),
+        start: new Date(a.scheduledAt),
+        end: addMinutes(new Date(a.scheduledAt), 60),
+        resource: {
+          ...a,
+          scheduledAt: new Date(a.scheduledAt),
+          completedAt: a.completedAt ? new Date(a.completedAt) : null,
+        },
       })),
     [appointments],
   );
 
-  const selectedItems = useMemo(() => {
-    if (!selectedDate) {
-      return [];
-    }
-    return normalizedAppointments.filter((appointment) =>
-      isSameDay(appointment.scheduledAt, selectedDate),
-    );
-  }, [normalizedAppointments, selectedDate]);
-
-  const appointmentDays = useMemo(
-    () => normalizedAppointments.map((appointment) => appointment.scheduledAt),
-    [normalizedAppointments],
-  );
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4 md:grid-cols-[auto_1fr]">
+    <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="h-[600px] [&_.rbc-toolbar]:hidden">
         <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={setSelectedDate}
-          modifiers={{ hasAppointment: appointmentDays }}
-          modifiersClassNames={{ hasAppointment: "bg-blue-50 text-blue-700 font-semibold" }}
+          localizer={localizer}
+          events={events}
+          view={view}
+          onView={handleViewChange}
+          date={date}
+          onNavigate={handleDateChange}
+          components={{ event: AppointmentEvent as never }}
+          onSelectEvent={(event) => router.push(`/appointments/${event.id}`)}
+          eventPropGetter={(event) => ({
+            style: {
+              backgroundColor:
+                event.resource.status === AppointmentStatus.COMPLETED
+                  ? "#22c55e"
+                  : event.resource.status === AppointmentStatus.CANCELLED
+                    ? "#f87171"
+                    : "#3b82f6",
+              border: "none",
+              borderRadius: "4px",
+            },
+          })}
         />
-        <div>
-          <p className="text-sm font-medium">
-            {selectedDate ? selectedDate.toLocaleDateString() : "Select a date"}
-          </p>
-          {selectedItems.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">No appointments on this date.</p>
-          ) : (
-            <ul className="mt-2 space-y-2">
-              {selectedItems.map((appointment) => (
-                <li key={appointment.id} className="rounded-md border p-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-medium">{appointment.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {appointment.scheduledAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </div>
-                    <Badge variant={appointment.completedAt ? "default" : "outline"}>
-                      {appointment.completedAt ? "Completed" : "Scheduled"}
-                    </Badge>
-                  </div>
-                  <Link className="mt-2 inline-block text-xs underline" href={`/appointments/${appointment.id}`}>
-                    Open appointment
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

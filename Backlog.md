@@ -13,3 +13,27 @@ No rate limiting is configured on any API endpoint. High-frequency abuse of auth
 Dependencies appear up to date, but no automated vulnerability scanning step is in the build pipeline.
 
 **Recommendation:** Add `pnpm audit --audit-level=high` as a required CI step so newly introduced vulnerable packages are caught before merging.
+
+
+## Productionizing
+
+### Clerk prod instance
+
+### Vercel prod / dev instances
+
+### Neon Prod
+
+### Feature flagging (vercel?)
+
+## AI
+
+### Asking system about patient profile
+    - Trends over time
+    - Nutrition plan - `Can I eat X?`
+
+
+## UI
+
+### Branding
+
+### DatePicker

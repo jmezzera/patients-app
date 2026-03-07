@@ -37,7 +37,12 @@ export default async function PatientDetailPage({ params }: Props) {
 
   if (!patient) notFound();
 
-  const appointments = patient.appointmentParticipants.map((p) => p.appointment);
+  type ApptItem = {
+    id: string; scheduledAt: Date; completedAt: Date | null; status: AppointmentStatus;
+    doctor: { displayName: string };
+    participants: { patient: { id: string; firstName: string; lastName: string; color: string | null; dob: Date | null; nutritionPlanId: string | null } }[];
+  };
+  const appointments = patient.appointmentParticipants.map((p) => p.appointment as unknown as ApptItem);
   const { data: trendData, series: trendSeries } = pivotMeasurements(patient.measurementEntries);
 
   const rawRows: RawMeasurement[] = patient.measurementEntries.map((e) => ({
@@ -61,7 +66,17 @@ export default async function PatientDetailPage({ params }: Props) {
     id: a.id,
     scheduledAt: a.scheduledAt,
     completedAt: a.completedAt,
-    label: `${patient.firstName} ${patient.lastName}`,
+    status: a.status,
+    doctorName: a.doctor.displayName,
+    participants: a.participants.map((ap) => ({
+      patientId: ap.patient.id,
+      firstName: ap.patient.firstName,
+      lastName: ap.patient.lastName,
+      color: ap.patient.color ?? null,
+      dob: ap.patient.dob ?? null,
+      nutritionPlanId: ap.patient.nutritionPlanId ?? null,
+      nutritionPlanName: null,
+    })),
   }));
 
   const publicNotes = patient.notes.filter((n) => n.isPublic);
@@ -102,7 +117,7 @@ export default async function PatientDetailPage({ params }: Props) {
         </Card>
       )}
 
-      <AppointmentsCalendar title={t("appointmentCalendar")} appointments={calendarRows} />
+      <AppointmentsCalendar appointments={calendarRows} />
 
       <Card>
         <CardHeader>
