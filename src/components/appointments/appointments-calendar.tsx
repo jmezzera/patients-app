@@ -120,7 +120,7 @@ export function AppointmentsCalendar({
 
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
-      <div className="h-[600px] [&_.rbc-toolbar]:hidden">
+      <div className="h-[420px] [&_.rbc-toolbar]:hidden">
         <Calendar
           localizer={localizer}
           events={events}
