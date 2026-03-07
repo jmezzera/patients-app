@@ -15,7 +15,27 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+      },
       colors: {
+        forest: {
+          50: '#f0f7f0',
+          100: '#d4e8d4',
+          500: '#3a6b3c',
+          900: '#1a2b1b',
+          DEFAULT: '#2b4a2c',
+        },
+        avocado: {
+          100: '#eaf5c2',
+          300: '#c4e07a',
+          500: '#9dc73a',
+          DEFAULT: '#c4e07a',
+        },
+        terracotta: {
+          DEFAULT: '#8b4b3a',
+          light: '#c47a6a',
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

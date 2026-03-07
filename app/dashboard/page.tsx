@@ -29,9 +29,8 @@ export default async function DashboardPage() {
   }
 
   try {
-    const [t, tn, tc] = await Promise.all([
+    const [t, tc] = await Promise.all([
       getTranslations("dashboard"),
-      getTranslations("nav"),
       getTranslations("common"),
     ]);
 
@@ -78,49 +77,7 @@ export default async function DashboardPage() {
 
     return (
       <main className="container py-8">
-        <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-          <Card className="h-fit">
-            <CardHeader>
-              <CardTitle className="text-base">{t("nav.workspace")}</CardTitle>
-              <CardDescription>{t("nav.clinicalRecords")}</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-2">
-              <Button variant="secondary" className="justify-start">
-                {t("title")}
-              </Button>
-              <Button asChild variant="ghost" className="justify-start">
-                <a href="/patients">{tn("patients")}</a>
-              </Button>
-              <Button asChild variant="ghost" className="justify-start">
-                <a href="/appointments">{tn("appointments")}</a>
-              </Button>
-              <Button asChild variant="ghost" className="justify-start">
-                <a href="/stats">{tn("stats")}</a>
-              </Button>
-              {actor.role === Role.DOCTOR && (
-                <>
-                  <Button asChild variant="ghost" className="justify-start">
-                    <a href="/availability">{tn("availability")}</a>
-                  </Button>
-                  <Button asChild variant="ghost" className="justify-start">
-                    <a href="/metric-types">{tn("metrics")}</a>
-                  </Button>
-                </>
-              )}
-              {actor.role === Role.MANAGER && (
-                <>
-                  <Button asChild variant="ghost" className="justify-start">
-                    <a href="/nutrition-plans">{tn("nutritionPlans")}</a>
-                  </Button>
-                  <Button asChild variant="ghost" className="justify-start">
-                    <a href="/metric-types">{tn("metrics")}</a>
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <section className="space-y-6">
+        <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
@@ -194,8 +151,7 @@ export default async function DashboardPage() {
                 </Button>
               </CardContent>
             </Card>
-          </section>
-        </div>
+        </section>
       </main>
     );
   } catch {

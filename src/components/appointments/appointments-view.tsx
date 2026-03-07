@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AppointmentStatus } from "@prisma/client";
-import { differenceInYears } from "date-fns";
+import {
+  differenceInYears,
+  startOfMonth, endOfMonth,
+  startOfWeek, endOfWeek,
+  startOfDay, endOfDay,
+  isWithinInterval,
+} from "date-fns";
 import { ChevronDown } from "lucide-react";
 import type { View } from "react-big-calendar";
 import { AppointmentsCalendar, ViewAppointment } from "./appointments-calendar";
@@ -27,15 +33,23 @@ type Doctor = { id: string; displayName: string };
 type Filters = {
   patientIds: string[];
   nutritionPlanId: string;
-  status: string;
+  statuses: AppointmentStatus[];
   minAge: string;
   maxAge: string;
+};
+
+const ALL_STATUSES = [AppointmentStatus.BOOKED, AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED];
+const DEFAULT_STATUSES: AppointmentStatus[] = [AppointmentStatus.BOOKED, AppointmentStatus.COMPLETED];
+const STATUS_LABELS: Record<AppointmentStatus, string> = {
+  BOOKED: "Booked",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
 const EMPTY_FILTERS: Filters = {
   patientIds: [],
   nutritionPlanId: "",
-  status: "",
+  statuses: DEFAULT_STATUSES,
   minAge: "",
   maxAge: "",
 };
@@ -79,18 +93,34 @@ function PatientCell({
 }
 
 function isActive(filters: Filters) {
+  const statusesChanged =
+    filters.statuses.length !== DEFAULT_STATUSES.length ||
+    !filters.statuses.every((s) => DEFAULT_STATUSES.includes(s));
   return (
     filters.patientIds.length > 0 ||
     filters.nutritionPlanId !== "" ||
-    filters.status !== "" ||
+    statusesChanged ||
     filters.minAge !== "" ||
     filters.maxAge !== ""
   );
 }
 
-function applyFilters(appointments: ViewAppointment[], filters: Filters): ViewAppointment[] {
+function getViewRange(view: View, date: Date): { start: Date; end: Date } {
+  if (view === "month") return { start: startOfMonth(date), end: endOfMonth(date) };
+  if (view === "week") return { start: startOfWeek(date), end: endOfWeek(date) };
+  return { start: startOfDay(date), end: endOfDay(date) };
+}
+
+function applyFilters(
+  appointments: ViewAppointment[],
+  filters: Filters,
+  view: View,
+  calendarDate: Date,
+): ViewAppointment[] {
   const now = new Date();
+  const range = getViewRange(view, calendarDate);
   return appointments.filter((a) => {
+    if (!isWithinInterval(new Date(a.scheduledAt), range)) return false;
     if (filters.patientIds.length > 0) {
       const match = a.participants.some((p) => filters.patientIds.includes(p.patientId));
       if (!match) return false;
@@ -101,7 +131,7 @@ function applyFilters(appointments: ViewAppointment[], filters: Filters): ViewAp
       if (!match) return false;
     }
 
-    if (filters.status && a.status !== filters.status) return false;
+    if (filters.statuses.length > 0 && !filters.statuses.includes(a.status)) return false;
 
     if (filters.minAge || filters.maxAge) {
       const min = filters.minAge ? parseInt(filters.minAge, 10) : null;
@@ -164,7 +194,7 @@ function PatientCombobox({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`flex h-8 min-w-[160px] items-center justify-between gap-2 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+        className={`flex h-8 min-w-[130px] items-center justify-between gap-2 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
           selectedIds.length === 0 ? "text-muted-foreground" : ""
         }`}
       >
@@ -229,6 +259,80 @@ function PatientCombobox({
   );
 }
 
+function StatusMultiselect({
+  selected,
+  onChange,
+}: {
+  selected: AppointmentStatus[];
+  onChange: (statuses: AppointmentStatus[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function toggle(s: AppointmentStatus) {
+    onChange(selected.includes(s) ? selected.filter((x) => x !== s) : [...selected, s]);
+  }
+
+  const label =
+    selected.length === ALL_STATUSES.length
+      ? "All statuses"
+      : selected.length === 0
+        ? "No statuses"
+        : selected.map((s) => STATUS_LABELS[s]).join(", ");
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`flex h-8 min-w-[120px] items-center justify-between gap-2 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+          selected.length === DEFAULT_STATUSES.length &&
+          selected.every((s) => DEFAULT_STATUSES.includes(s))
+            ? "text-muted-foreground"
+            : ""
+        }`}
+      >
+        <span className="truncate">{label}</span>
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-[160px] rounded-md border bg-popover shadow-md">
+          <div className="divide-y">
+            {ALL_STATUSES.map((s) => {
+              const checked = selected.includes(s);
+              return (
+                <label
+                  key={s}
+                  className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 ${
+                    checked ? "bg-muted/30" : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(s)}
+                    className="h-4 w-4 rounded border-input accent-primary"
+                  />
+                  {STATUS_LABELS[s]}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type Props = {
   appointments: ViewAppointment[];
   nutritionPlans: NutritionPlan[];
@@ -248,9 +352,12 @@ export function AppointmentsView({
   const [view, setView] = useState<View>("month");
   const [calendarDate, setCalendarDate] = useState(new Date());
 
-  const filtered = useMemo(() => applyFilters(appointments, filters), [appointments, filters]);
+  const filtered = useMemo(
+    () => applyFilters(appointments, filters, view, calendarDate),
+    [appointments, filters, view, calendarDate],
+  );
 
-  function set(key: keyof Omit<Filters, "patientIds">) {
+  function set(key: keyof Omit<Filters, "patientIds" | "statuses">) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setFilters((prev) => ({ ...prev, [key]: e.target.value }));
   }
@@ -269,7 +376,7 @@ export function AppointmentsView({
   return (
     <div className="space-y-4">
       {/* Unified filter + nav + CTA row */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
+      <div className="flex items-center gap-2 rounded-lg border bg-card p-3">
         <PatientCombobox
           patients={patients}
           selectedIds={filters.patientIds}
@@ -287,16 +394,10 @@ export function AppointmentsView({
           ))}
         </select>
 
-        <select
-          value={filters.status}
-          onChange={set("status")}
-          className="h-8 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All statuses</option>
-          <option value="BOOKED">Booked</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
+        <StatusMultiselect
+          selected={filters.statuses}
+          onChange={(statuses) => setFilters((prev) => ({ ...prev, statuses }))}
+        />
 
         <div className="flex items-center gap-1">
           <Input
@@ -306,7 +407,7 @@ export function AppointmentsView({
             placeholder="Min age"
             value={filters.minAge}
             onChange={set("minAge")}
-            className="h-8 w-[72px] text-sm"
+            className="h-8 w-[60px] text-sm"
           />
           <span className="text-muted-foreground">–</span>
           <Input
@@ -316,7 +417,7 @@ export function AppointmentsView({
             placeholder="Max age"
             value={filters.maxAge}
             onChange={set("maxAge")}
-            className="h-8 w-[72px] text-sm"
+            className="h-8 w-[60px] text-sm"
           />
         </div>
 
