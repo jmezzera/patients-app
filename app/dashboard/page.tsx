@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageShell } from "@/components/layout/page-shell";
 
 const signInRoute = "/sign-in" as Route;
 
@@ -76,17 +77,16 @@ export default async function DashboardPage() {
     });
 
     return (
-      <main className="container px-4 py-6 md:px-6 md:py-8">
-        <section className="space-y-6">
-            <div className="flex items-center justify-between">
+      <PageShell>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
                 <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
               </div>
               <Badge variant="secondary">{actor.role.toLowerCase()}</Badge>
-            </div>
+        </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>{t("stats.totalPatients")}</CardDescription>
@@ -107,9 +107,9 @@ export default async function DashboardPage() {
                   <CardTitle className="text-3xl">{measurementCount}</CardTitle>
                 </CardHeader>
               </Card>
-            </div>
+        </div>
 
-            <Card>
+        <Card>
               <CardHeader>
                 <CardTitle>{t("recentAppointments.title")}</CardTitle>
                 <CardDescription>{t("recentAppointments.description")}</CardDescription>
@@ -153,9 +153,8 @@ export default async function DashboardPage() {
                 </Button>
                 </div>
               </CardContent>
-            </Card>
-        </section>
-      </main>
+        </Card>
+      </PageShell>
     );
   } catch {
     redirect("/");

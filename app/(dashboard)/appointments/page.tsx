@@ -6,6 +6,7 @@ import { listPatients } from "@/lib/repos/patients";
 import { db } from "@/lib/db";
 import { AppointmentsView } from "@/components/appointments/appointments-view";
 import type { ViewAppointment } from "@/components/appointments/appointments-calendar";
+import { PageShell } from "@/components/layout/page-shell";
 
 export default async function AppointmentsPage() {
   const actor = await getSessionActor();
@@ -58,15 +59,14 @@ export default async function AppointmentsPage() {
   const defaultDoctorId = actor.role === Role.DOCTOR ? actor.id : undefined;
 
   return (
-    <main className="container space-y-4 px-4 py-6 md:px-6 md:py-8">
+    <PageShell className="max-w-none">
       <AppointmentsView
         appointments={viewAppointments}
         nutritionPlans={nutritionPlans}
         patients={patients}
         doctors={doctors}
         defaultDoctorId={defaultDoctorId}
-
       />
-    </main>
+    </PageShell>
   );
 }

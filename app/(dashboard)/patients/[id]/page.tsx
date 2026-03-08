@@ -16,6 +16,7 @@ import { AddPatientNoteForm } from "@/components/forms/add-patient-note-form";
 import { AppointmentsCalendar } from "@/components/appointments/appointments-calendar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageShell } from "@/components/layout/page-shell";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -84,7 +85,7 @@ export default async function PatientDetailPage({ params }: Props) {
   const canEdit = actor.role === Role.DOCTOR || actor.role === Role.MANAGER;
 
   return (
-    <main className="mx-auto grid max-w-5xl gap-4 p-6">
+    <PageShell>
       <h1 className="text-2xl font-semibold">{t("title")}</h1>
 
       <ProfileCard
@@ -238,6 +239,6 @@ export default async function PatientDetailPage({ params }: Props) {
       <MeasurementTable rows={patient.measurementEntries} showAppointmentLinks />
       <RadarChart rawRows={rawRows} title={t("metricSnapshot")} />
       <TrendChart data={trendData} series={trendSeries} title={t("historicTrends")} appointments={appointmentMarkers} />
-    </main>
+    </PageShell>
   );
 }

@@ -8,6 +8,7 @@ import {
   listDoctors,
 } from "@/lib/repos/stats";
 import { StatsView } from "@/components/stats/stats-view";
+import { PageShell } from "@/components/layout/page-shell";
 
 export default async function StatsPage() {
   const actor = await getSessionActor();
@@ -26,7 +27,7 @@ export default async function StatsPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-6 py-10">
+    <PageShell>
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
@@ -35,6 +36,6 @@ export default async function StatsPage() {
         initial={{ appointmentStats, patientStats, timeSeries, doctors }}
         isManager={actor.role === Role.MANAGER}
       />
-    </main>
+    </PageShell>
   );
 }

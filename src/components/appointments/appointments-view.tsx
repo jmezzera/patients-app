@@ -349,7 +349,9 @@ export function AppointmentsView({
   defaultDoctorId,
 }: Props) {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [view, setView] = useState<View>("month");
+  const [view, setView] = useState<View>(() =>
+    typeof window !== "undefined" && window.innerWidth < 640 ? "day" : "month"
+  );
   const [calendarDate, setCalendarDate] = useState(new Date());
 
   const filtered = useMemo(
@@ -375,86 +377,91 @@ export function AppointmentsView({
 
   return (
     <div className="space-y-4">
-      {/* Unified filter + nav + CTA row */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3 md:flex-nowrap">
-        <PatientCombobox
-          patients={patients}
-          selectedIds={filters.patientIds}
-          onChange={(ids) => setFilters((prev) => ({ ...prev, patientIds: ids }))}
-        />
-
-        <select
-          value={filters.nutritionPlanId}
-          onChange={set("nutritionPlanId")}
-          className="h-8 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">All plans</option>
-          {nutritionPlans.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-
-        <StatusMultiselect
-          selected={filters.statuses}
-          onChange={(statuses) => setFilters((prev) => ({ ...prev, statuses }))}
-        />
-
-        <div className="flex items-center gap-1">
-          <Input
-            type="number"
-            min={0}
-            max={120}
-            placeholder="Min age"
-            value={filters.minAge}
-            onChange={set("minAge")}
-            className="h-8 w-[60px] text-sm"
+      {/* Filter toolbar */}
+      <div className="flex flex-col gap-2 rounded-lg border bg-card p-3">
+        {/* Row 1: filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <PatientCombobox
+            patients={patients}
+            selectedIds={filters.patientIds}
+            onChange={(ids) => setFilters((prev) => ({ ...prev, patientIds: ids }))}
           />
-          <span className="text-muted-foreground">–</span>
-          <Input
-            type="number"
-            min={0}
-            max={120}
-            placeholder="Max age"
-            value={filters.maxAge}
-            onChange={set("maxAge")}
-            className="h-8 w-[60px] text-sm"
+
+          <select
+            value={filters.nutritionPlanId}
+            onChange={set("nutritionPlanId")}
+            className="h-8 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All plans</option>
+            {nutritionPlans.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+
+          <StatusMultiselect
+            selected={filters.statuses}
+            onChange={(statuses) => setFilters((prev) => ({ ...prev, statuses }))}
           />
+
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              min={0}
+              max={120}
+              placeholder="Min age"
+              value={filters.minAge}
+              onChange={set("minAge")}
+              className="h-8 w-[60px] text-sm"
+            />
+            <span className="text-muted-foreground">–</span>
+            <Input
+              type="number"
+              min={0}
+              max={120}
+              placeholder="Max age"
+              value={filters.maxAge}
+              onChange={set("maxAge")}
+              className="h-8 w-[60px] text-sm"
+            />
+          </div>
+
+          {anyFilter && (
+            <Button variant="ghost" size="sm" onClick={() => setFilters(EMPTY_FILTERS)} className="h-8">
+              Clear
+            </Button>
+          )}
+          {anyFilter && (
+            <span className="text-xs text-muted-foreground">
+              {filtered.length} of {appointments.length}
+            </span>
+          )}
         </div>
 
-        {anyFilter && (
-          <Button variant="ghost" size="sm" onClick={() => setFilters(EMPTY_FILTERS)} className="h-8">
-            Clear
-          </Button>
-        )}
-        {anyFilter && (
-          <span className="text-xs text-muted-foreground">
-            {filtered.length} of {appointments.length}
-          </span>
-        )}
+        {/* Row 2: calendar nav + view toggle + CTA */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={() => navigate("prev")}>‹</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("today")}>Today</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("next")}>›</Button>
+          </div>
 
-        <div className="flex-1" />
-
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" onClick={() => navigate("prev")}>‹</Button>
-          <Button variant="outline" size="sm" onClick={() => navigate("today")}>Today</Button>
-          <Button variant="outline" size="sm" onClick={() => navigate("next")}>›</Button>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-md border">
+              {VIEWS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setView(key)}
+                  className={`px-3 py-1 text-sm transition-colors first:rounded-l-md last:rounded-r-md ${
+                    view === key ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <CreateAppointmentForm patients={patients} doctors={doctors} defaultDoctorId={defaultDoctorId} />
+          </div>
         </div>
-
-        <div className="flex rounded-md border">
-          {VIEWS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setView(key)}
-              className={`px-3 py-1 text-sm transition-colors first:rounded-l-md last:rounded-r-md ${
-                view === key ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <CreateAppointmentForm patients={patients} doctors={doctors} defaultDoctorId={defaultDoctorId} />
       </div>
 
       {/* Calendar */}

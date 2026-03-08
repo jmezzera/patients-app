@@ -6,6 +6,7 @@ import { getAppointment } from "@/lib/repos/appointments";
 import { listMetricTypes } from "@/lib/repos/metric-types";
 import { AppointmentStatusControls } from "@/components/appointments/appointment-status-controls";
 import { AppointmentPatientTabs } from "@/components/appointments/appointment-patient-tabs";
+import { PageShell } from "@/components/layout/page-shell";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -23,8 +24,8 @@ export default async function AppointmentDetailPage({ params }: Props) {
   const canEdit = actor.role === Role.DOCTOR || actor.role === Role.MANAGER;
 
   return (
-    <main className="mx-auto max-w-4xl p-4 md:p-6 space-y-4">
-      <div className="flex items-start justify-between gap-4">
+    <PageShell className="max-w-4xl">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -54,6 +55,6 @@ export default async function AppointmentDetailPage({ params }: Props) {
         metricTypes={metricTypes}
         canEdit={canEdit}
       />
-    </main>
+    </PageShell>
   );
 }

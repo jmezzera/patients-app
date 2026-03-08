@@ -6,6 +6,7 @@ import { listPatients } from "@/lib/repos/patients";
 import { listNutritionPlans } from "@/lib/repos/nutrition-plans";
 import { db } from "@/lib/db";
 import { CreatePatientForm } from "@/components/forms/create-patient-form";
+import { PageShell } from "@/components/layout/page-shell";
 
 export default async function PatientsPage() {
   const actor = await getSessionActor();
@@ -22,8 +23,8 @@ export default async function PatientsPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-6 flex items-end justify-between">
+    <PageShell>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -56,6 +57,6 @@ export default async function PatientsPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </PageShell>
   );
 }

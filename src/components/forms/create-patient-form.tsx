@@ -82,22 +82,22 @@ export function CreatePatientForm({ doctors, nutritionPlans, onCreated }: Props)
         <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex gap-2">
-          <label className="grid flex-1 gap-1 text-sm">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label className="grid gap-1 text-sm">
             {t("firstName")}
             <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </label>
-          <label className="grid flex-1 gap-1 text-sm">
+          <label className="grid gap-1 text-sm">
             {t("lastName")}
             <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </label>
         </div>
-        <div className="flex gap-2">
-          <label className="grid flex-1 gap-1 text-sm">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label className="grid gap-1 text-sm">
             {t("phone")}
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </label>
-          <label className="grid flex-1 gap-1 text-sm">
+          <label className="grid gap-1 text-sm">
             {t("dob")}
             <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
           </label>
