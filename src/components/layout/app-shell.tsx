@@ -30,7 +30,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-background">
         <header className="flex items-center justify-between border-b bg-white px-6 py-4">
-          <span className="text-lg font-bold text-primary">Jamil Cesin</span>
+          <span className="text-lg font-bold text-primary">Jami / Logo</span>
           <div className="flex items-center gap-4 text-sm">
             <Link
               href={signInRoute}
@@ -63,7 +63,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="flex w-60 flex-shrink-0 flex-col bg-primary">
         <div className="flex h-16 items-center border-b border-white/10 px-5">
           <Link href="/dashboard" className="text-base font-bold tracking-tight text-white">
-            Jamil Cesin
+            Jami / Logo
           </Link>
         </div>
 
