@@ -76,7 +76,7 @@ export default async function DashboardPage() {
     });
 
     return (
-      <main className="container py-8">
+      <main className="container px-4 py-6 md:px-6 md:py-8">
         <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -114,7 +114,8 @@ export default async function DashboardPage() {
                 <CardTitle>{t("recentAppointments.title")}</CardTitle>
                 <CardDescription>{t("recentAppointments.description")}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -145,10 +146,12 @@ export default async function DashboardPage() {
                     })}
                   </TableBody>
                 </Table>
-                <Separator className="my-4" />
+                </div>
+                <div className="border-t p-4">
                 <Button asChild variant="outline">
                   <a href="/patients">{t("recentAppointments.openAll")}</a>
                 </Button>
+                </div>
               </CardContent>
             </Card>
         </section>

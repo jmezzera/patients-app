@@ -376,7 +376,7 @@ export function AppointmentsView({
   return (
     <div className="space-y-4">
       {/* Unified filter + nav + CTA row */}
-      <div className="flex items-center gap-2 rounded-lg border bg-card p-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3 md:flex-nowrap">
         <PatientCombobox
           patients={patients}
           selectedIds={filters.patientIds}
@@ -467,7 +467,7 @@ export function AppointmentsView({
       />
 
       {/* Table */}
-      <div className="rounded-lg border bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

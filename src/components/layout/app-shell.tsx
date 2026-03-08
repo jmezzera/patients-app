@@ -1,23 +1,11 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
-import {
-  LayoutDashboard,
-  Users,
-  CalendarDays,
-  BarChart3,
-  Clock,
-  Activity,
-  Leaf,
-  User,
-  Ruler,
-  TrendingUp,
-} from "lucide-react";
 import { db } from "@/lib/db";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { Sidebar, type NavItem } from "@/components/layout/sidebar";
 
 const signInRoute = "/sign-in" as Route;
 const signUpRoute = "/sign-up" as Route;
@@ -29,9 +17,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   if (!userId) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="flex items-center justify-between border-b bg-white px-6 py-4">
-          <span className="text-lg font-bold text-primary">Jami / Logo</span>
-          <div className="flex items-center gap-4 text-sm">
+        <header className="flex items-center justify-between border-b bg-white px-4 py-4 md:px-6">
+          <span className="text-lg font-bold text-primary">Jamil Cesin</span>
+          <div className="flex items-center gap-3 text-sm">
             <Link
               href={signInRoute}
               className="text-muted-foreground transition-colors hover:text-foreground"
@@ -58,84 +46,37 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   });
   const role = localUser?.role ?? null;
 
+  const navItems: NavItem[] = role !== Role.PATIENT
+    ? [
+        { href: "/dashboard", icon: "LayoutDashboard", label: t("dashboard") },
+        { href: "/patients", icon: "Users", label: t("patients") },
+        { href: "/appointments", icon: "CalendarDays", label: t("appointments") },
+        { href: "/stats", icon: "BarChart3", label: t("stats"), isExternal: true },
+        ...(role === Role.DOCTOR
+          ? [
+              { href: "/availability", icon: "Clock", label: t("availability"), isExternal: true },
+              { href: "/metric-types", icon: "Activity", label: t("metrics"), isExternal: true },
+            ]
+          : []),
+        ...(role === Role.MANAGER
+          ? [
+              { href: "/nutrition-plans", icon: "Leaf", label: t("nutritionPlans"), isExternal: true },
+              { href: "/metric-types", icon: "Activity", label: t("metrics"), isExternal: true },
+            ]
+          : []),
+      ]
+    : [
+        { href: "/me", icon: "User", label: t("myProfile") },
+        { href: "/measurements", icon: "Ruler", label: t("measurements") },
+        { href: "/trends", icon: "TrendingUp", label: t("trends") },
+      ];
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside className="flex w-60 flex-shrink-0 flex-col bg-primary">
-        <div className="flex h-16 items-center border-b border-white/10 px-5">
-          <Link href="/dashboard" className="text-base font-bold tracking-tight text-white">
-            Jami / Logo
-          </Link>
-        </div>
-
-        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-          {role !== Role.PATIENT ? (
-            <>
-              <SidebarLink href="/dashboard" icon={LayoutDashboard} label={t("dashboard")} />
-              <SidebarLink href="/patients" icon={Users} label={t("patients")} />
-              <SidebarLink href="/appointments" icon={CalendarDays} label={t("appointments")} />
-              <SidebarLink href="/stats" icon={BarChart3} label={t("stats")} isExternal />
-              {role === Role.DOCTOR && (
-                <>
-                  <SidebarLink href="/availability" icon={Clock} label={t("availability")} isExternal />
-                  <SidebarLink href="/metric-types" icon={Activity} label={t("metrics")} isExternal />
-                </>
-              )}
-              {role === Role.MANAGER && (
-                <>
-                  <SidebarLink href="/nutrition-plans" icon={Leaf} label={t("nutritionPlans")} isExternal />
-                  <SidebarLink href="/metric-types" icon={Activity} label={t("metrics")} isExternal />
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <SidebarLink href="/me" icon={User} label={t("myProfile")} />
-              <SidebarLink href="/measurements" icon={Ruler} label={t("measurements")} />
-              <SidebarLink href="/trends" icon={TrendingUp} label={t("trends")} />
-            </>
-          )}
-        </nav>
-
-        <div className="flex items-center gap-3 border-t border-white/10 px-5 py-4">
-          <UserButton />
-          <LocaleSwitcher />
-        </div>
-      </aside>
-
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+      <Sidebar navItems={navItems} />
       <main className="flex-1 overflow-y-auto bg-background">
         {children}
       </main>
     </div>
-  );
-}
-
-function SidebarLink({
-  href,
-  icon: Icon,
-  label,
-  isExternal,
-}: {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-  isExternal?: boolean;
-}) {
-  const cls =
-    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white";
-
-  if (isExternal) {
-    return (
-      <a href={href} className={cls}>
-        <Icon className="h-4 w-4 flex-shrink-0" />
-        {label}
-      </a>
-    );
-  }
-
-  return (
-    <Link href={href as Route} className={cls}>
-      <Icon className="h-4 w-4 flex-shrink-0" />
-      {label}
-    </Link>
   );
 }

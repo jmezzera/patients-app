@@ -23,7 +23,7 @@ export default async function AppointmentDetailPage({ params }: Props) {
   const canEdit = actor.role === Role.DOCTOR || actor.role === Role.MANAGER;
 
   return (
-    <main className="mx-auto max-w-4xl p-6 space-y-4">
+    <main className="mx-auto max-w-4xl p-4 md:p-6 space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">{t("title")}</h1>

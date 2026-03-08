@@ -58,7 +58,7 @@ export default async function AppointmentsPage() {
   const defaultDoctorId = actor.role === Role.DOCTOR ? actor.id : undefined;
 
   return (
-    <main className="container space-y-4 py-8">
+    <main className="container space-y-4 px-4 py-6 md:px-6 md:py-8">
       <AppointmentsView
         appointments={viewAppointments}
         nutritionPlans={nutritionPlans}
