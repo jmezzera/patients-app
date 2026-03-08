@@ -16,6 +16,7 @@ export async function listPatients(actor: SessionActor, doctorId?: string) {
     include: {
       nutritionPlan: true,
       assignedDoctor: { select: { id: true, displayName: true } },
+      user: { select: { weeklySchedule: { orderBy: { dayOfWeek: "asc" } } } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -29,6 +30,7 @@ export async function getPatientProfile(actor: SessionActor, patientId: string) 
     include: {
       nutritionPlan: true,
       assignedDoctor: { select: { id: true, displayName: true } },
+      user: { select: { weeklySchedule: { orderBy: { dayOfWeek: "asc" } } } },
       measurementEntries: {
         include: { metricType: true, recorderUser: { select: { displayName: true } } },
         orderBy: { measuredAt: "desc" },

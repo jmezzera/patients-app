@@ -4,7 +4,9 @@ import { AppointmentStatus } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { getPatientProfile } from "@/lib/repos/patients";
+import { getWeeklySchedule } from "@/lib/repos/availability";
 import { ProfileCard } from "@/components/patient/profile-card";
+import { SchedulePreferenceForm } from "@/components/patient/schedule-preference-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -36,7 +38,11 @@ export default async function MyProfilePage() {
     return <InternalUserProfilePage />;
   }
 
-  const patient = await getPatientProfile(actor, actor.patientId);
+  const [patient, scheduleSlots] = await Promise.all([
+    getPatientProfile(actor, actor.patientId),
+    getWeeklySchedule(actor, actor.id),
+  ]);
+
   if (!patient) {
     notFound();
   }
@@ -61,6 +67,8 @@ export default async function MyProfilePage() {
         clinicalSummary={patient.clinicalSummary}
         phone={patient.phone}
       />
+
+      <SchedulePreferenceForm initialSlots={scheduleSlots} />
 
       <Card>
         <CardHeader>

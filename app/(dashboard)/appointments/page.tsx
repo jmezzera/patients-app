@@ -56,6 +56,15 @@ export default async function AppointmentsPage() {
     a.name.localeCompare(b.name),
   );
 
+  // Patient options for the create-appointment form (with schedule slots)
+  const patientOptions = patients.map((p) => ({
+    id: p.id,
+    firstName: p.firstName,
+    lastName: p.lastName,
+    color: p.color,
+    scheduleSlots: p.user?.weeklySchedule ?? [],
+  }));
+
   const defaultDoctorId = actor.role === Role.DOCTOR ? actor.id : undefined;
 
   return (
@@ -63,7 +72,7 @@ export default async function AppointmentsPage() {
       <AppointmentsView
         appointments={viewAppointments}
         nutritionPlans={nutritionPlans}
-        patients={patients}
+        patients={patientOptions}
         doctors={doctors}
         defaultDoctorId={defaultDoctorId}
       />

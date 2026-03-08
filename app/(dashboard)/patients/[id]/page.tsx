@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Role, AppointmentStatus } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
-import { getPatientProfile } from "@/lib/repos/patients";
+import { getPatientProfile, listPatients } from "@/lib/repos/patients";
 import { listNutritionPlans } from "@/lib/repos/nutrition-plans";
 import { db } from "@/lib/db";
 import { ProfileCard } from "@/components/patient/profile-card";
@@ -13,7 +13,7 @@ import { RadarChart } from "@/components/metrics/radar-chart";
 import { pivotMeasurements, type AppointmentMarker, type RawMeasurement } from "@/lib/chart-utils";
 import { EditPatientRecordForm } from "@/components/forms/edit-patient-record-form";
 import { AddPatientNoteForm } from "@/components/forms/add-patient-note-form";
-import { AppointmentsCalendar } from "@/components/appointments/appointments-calendar";
+import { PatientAppointmentsPanel } from "@/components/appointments/patient-appointments-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageShell } from "@/components/layout/page-shell";
@@ -26,7 +26,7 @@ export default async function PatientDetailPage({ params }: Props) {
   const t = await getTranslations("patients.detail");
   const tc = await getTranslations("common");
 
-  const [patient, nutritionPlans, doctors] = await Promise.all([
+  const [patient, nutritionPlans, doctors, allPatients] = await Promise.all([
     getPatientProfile(actor, id),
     listNutritionPlans(actor),
     db.user.findMany({
@@ -34,6 +34,7 @@ export default async function PatientDetailPage({ params }: Props) {
       select: { id: true, displayName: true },
       orderBy: { displayName: "asc" },
     }),
+    listPatients(actor),
   ]);
 
   if (!patient) notFound();
@@ -80,6 +81,14 @@ export default async function PatientDetailPage({ params }: Props) {
     })),
   }));
 
+  const patientOptions = allPatients.map((p) => ({
+    id: p.id,
+    firstName: p.firstName,
+    lastName: p.lastName,
+    color: p.color,
+    scheduleSlots: p.user?.weeklySchedule ?? [],
+  }));
+
   const publicNotes = patient.notes.filter((n) => n.isPublic);
   const internalNotes = patient.notes.filter((n) => !n.isPublic);
   const canEdit = actor.role === Role.DOCTOR || actor.role === Role.MANAGER;
@@ -95,6 +104,26 @@ export default async function PatientDetailPage({ params }: Props) {
         assignedDoctor={patient.assignedDoctor?.displayName ?? null}
         clinicalSummary={patient.clinicalSummary}
       />
+
+      {patient.user?.weeklySchedule && patient.user.weeklySchedule.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("schedulePreference")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-1 text-sm">
+              {patient.user.weeklySchedule.map((s) => (
+                <li key={s.id} className="flex items-center gap-3">
+                  <span className="w-28 font-medium">
+                    {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][s.dayOfWeek]}
+                  </span>
+                  <span className="text-muted-foreground">{s.startTime} – {s.endTime}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {canEdit && (
         <Card>
@@ -118,38 +147,13 @@ export default async function PatientDetailPage({ params }: Props) {
         </Card>
       )}
 
-      <AppointmentsCalendar appointments={calendarRows} />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("appointments")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {appointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noAppointments")}</p>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {appointments.map((a) => (
-                <li key={a.id} className="flex items-center justify-between rounded-md border p-2">
-                  <div>
-                    <Link href={`/appointments/${a.id}`} className="font-medium underline">
-                      {new Date(a.scheduledAt).toLocaleString()}
-                    </Link>
-                    <p className="text-xs text-muted-foreground">{a.doctor.displayName}</p>
-                  </div>
-                  {a.status === AppointmentStatus.COMPLETED ? (
-                    <Badge>{tc("status.completed")}</Badge>
-                  ) : a.status === AppointmentStatus.CANCELLED ? (
-                    <Badge className="border-red-300 bg-red-100 text-red-700">{tc("status.cancelled")}</Badge>
-                  ) : (
-                    <Badge variant="outline">{tc("status.booked")}</Badge>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <PatientAppointmentsPanel
+        appointments={calendarRows}
+        patients={canEdit ? patientOptions : []}
+        doctors={doctors}
+        defaultDoctorId={actor.role === Role.DOCTOR ? actor.id : patient.assignedDoctorId ?? undefined}
+        defaultPatientIds={[patient.id]}
+      />
 
       <Card>
         <CardHeader>

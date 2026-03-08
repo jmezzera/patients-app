@@ -75,7 +75,7 @@ model User {
   appointments     Appointment[]   @relation("AppointmentDoctor")
   notes            Note[]
   measurements     MeasurementEntry[]
-  workingHours     WorkingHours[]
+  weeklySchedule   WeeklySchedule[]
   calendarBlocks   CalendarBlock[]
   audits           AuditEvent[]
 
@@ -229,18 +229,18 @@ model UploadedAsset {
 
 // ─── Doctor availability ───────────────────────────────────────────────────────
 
-model WorkingHours {
+model WeeklySchedule {
   id        String @id @default(cuid())
   orgId     String
-  doctorId  String
+  userId    String
   dayOfWeek Int    // 0 = Sunday … 6 = Saturday
   startTime String // "HH:MM"
   endTime   String // "HH:MM"
 
-  doctor User @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([doctorId, dayOfWeek])
-  @@index([orgId, doctorId])
+  @@unique([userId, dayOfWeek])
+  @@index([orgId, userId])
 }
 
 model CalendarBlock {

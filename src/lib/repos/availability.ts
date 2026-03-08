@@ -2,45 +2,51 @@ import { Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { assertRole, type SessionActor } from "@/lib/authz";
 
-export async function getWorkingHours(actor: SessionActor, doctorId: string) {
-  assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
+// ── Shared: weekly schedule (doctors + patients) ────────────────────────────
 
-  return db.workingHours.findMany({
-    where: { doctorId, orgId: actor.orgId },
+export async function getWeeklySchedule(actor: SessionActor, userId: string) {
+  assertRole(actor, [Role.MANAGER, Role.DOCTOR, Role.PATIENT]);
+
+  // Patients can only fetch their own schedule
+  if (actor.role === Role.PATIENT && actor.id !== userId) throw new Error("Forbidden");
+
+  return db.weeklySchedule.findMany({
+    where: { userId, orgId: actor.orgId },
     orderBy: { dayOfWeek: "asc" },
   });
 }
 
-export async function setWorkingHours(
+export async function setWeeklySchedule(
   actor: SessionActor,
-  doctorId: string,
-  hours: Array<{ dayOfWeek: number; startTime: string; endTime: string }>,
+  userId: string,
+  slots: Array<{ dayOfWeek: number; startTime: string; endTime: string }>,
 ) {
-  assertRole(actor, [Role.DOCTOR]);
+  assertRole(actor, [Role.DOCTOR, Role.PATIENT]);
 
-  // Doctors can only edit their own hours
-  if (actor.id !== doctorId) throw new Error("Forbidden");
+  // Each role can only edit their own schedule
+  if (actor.id !== userId) throw new Error("Forbidden");
 
-  // Replace full weekly schedule
-  await db.workingHours.deleteMany({ where: { doctorId, orgId: actor.orgId } });
+  await db.weeklySchedule.deleteMany({ where: { userId, orgId: actor.orgId } });
 
-  if (hours.length > 0) {
-    await db.workingHours.createMany({
-      data: hours.map((h) => ({
+  if (slots.length > 0) {
+    await db.weeklySchedule.createMany({
+      data: slots.map((s) => ({
         orgId: actor.orgId,
-        doctorId,
-        dayOfWeek: h.dayOfWeek,
-        startTime: h.startTime,
-        endTime: h.endTime,
+        userId,
+        dayOfWeek: s.dayOfWeek,
+        startTime: s.startTime,
+        endTime: s.endTime,
       })),
     });
   }
 
-  return db.workingHours.findMany({
-    where: { doctorId, orgId: actor.orgId },
+  return db.weeklySchedule.findMany({
+    where: { userId, orgId: actor.orgId },
     orderBy: { dayOfWeek: "asc" },
   });
 }
+
+// ── Doctor availability: calendar blocks ────────────────────────────────────
 
 export async function listCalendarBlocks(actor: SessionActor, doctorId: string) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);

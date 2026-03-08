@@ -6,16 +6,39 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type Patient = { id: string; firstName: string; lastName: string; color?: string | null };
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+type ScheduleSlot = { dayOfWeek: number; startTime: string; endTime: string };
+type Patient = { id: string; firstName: string; lastName: string; color?: string | null; scheduleSlots?: ScheduleSlot[] };
 type Doctor = { id: string; displayName: string };
 
 type Props = {
   patients: Patient[];
   doctors: Doctor[];
   defaultDoctorId?: string;
+  defaultPatientIds?: string[];
 };
 
-export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Props) {
+function ScheduleHints({ patients, selectedIds }: { patients: Patient[]; selectedIds: string[] }) {
+  const selected = patients.filter((p) => selectedIds.includes(p.id) && (p.scheduleSlots?.length ?? 0) > 0);
+  if (selected.length === 0) return null;
+
+  return (
+    <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs space-y-1.5">
+      <p className="font-medium text-muted-foreground">Patient schedule preferences</p>
+      {selected.map((p) => (
+        <div key={p.id}>
+          <span className="font-medium">{p.firstName} {p.lastName}:</span>{" "}
+          <span className="text-muted-foreground">
+            {p.scheduleSlots!.map((s) => `${DAY_NAMES[s.dayOfWeek]} ${s.startTime}–${s.endTime}`).join(", ")}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defaultPatientIds }: Props) {
   const router = useRouter();
   const t = useTranslations("appointments.form");
   const tc = useTranslations("common");
@@ -23,7 +46,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
+  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(defaultPatientIds ?? []);
   const [doctorId, setDoctorId] = useState(defaultDoctorId ?? doctors[0]?.id ?? "");
   const [scheduledAt, setScheduledAt] = useState("");
 
@@ -40,7 +63,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
   function close() {
     setOpen(false);
     setError(null);
-    setSelectedPatientIds([]);
+    setSelectedPatientIds(defaultPatientIds ?? []);
     setScheduledAt("");
     setDoctorId(defaultDoctorId ?? doctors[0]?.id ?? "");
   }
@@ -160,6 +183,9 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId }: Pr
                   })}
                 </div>
               </div>
+
+              {/* Schedule hints — shown when patients with preferences are selected */}
+              <ScheduleHints patients={patients} selectedIds={selectedPatientIds} />
 
               {/* Date & time */}
               <div className="grid gap-1.5">

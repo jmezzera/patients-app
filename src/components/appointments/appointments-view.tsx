@@ -27,7 +27,8 @@ import {
 import { CreateAppointmentForm } from "@/components/forms/create-appointment-form";
 
 type NutritionPlan = { id: string; name: string };
-type Patient = { id: string; firstName: string; lastName: string; color?: string | null };
+type ScheduleSlot = { dayOfWeek: number; startTime: string; endTime: string };
+type Patient = { id: string; firstName: string; lastName: string; color?: string | null; scheduleSlots?: ScheduleSlot[] };
 type Doctor = { id: string; displayName: string };
 
 type Filters = {

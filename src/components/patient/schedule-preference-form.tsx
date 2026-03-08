@@ -7,17 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 type ScheduleSlot = { dayOfWeek: number; startTime: string; endTime: string };
-type Props = { userId: string; initialSlots: ScheduleSlot[] };
+type Props = { initialSlots: ScheduleSlot[] };
 
-function blankSchedule(): ScheduleSlot[] {
-  return [1, 2, 3, 4, 5].map((d) => ({ dayOfWeek: d, startTime: "09:00", endTime: "18:00" }));
-}
-
-export function WorkingHoursForm({ userId, initialSlots }: Props) {
-  const t = useTranslations("availability");
-  const [slots, setSlots] = useState<ScheduleSlot[]>(
-    initialSlots.length > 0 ? initialSlots : blankSchedule(),
-  );
+export function SchedulePreferenceForm({ initialSlots }: Props) {
+  const t = useTranslations("patient.schedulePreference");
+  const td = useTranslations("availability");
+  const [slots, setSlots] = useState<ScheduleSlot[]>(initialSlots);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -39,10 +34,10 @@ export function WorkingHoursForm({ userId, initialSlots }: Props) {
 
   async function save() {
     setSaving(true);
-    await fetch("/api/availability/working-hours", {
+    await fetch("/api/me/schedule", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, slots }),
+      body: JSON.stringify(slots),
     });
     setSaved(true);
     setSaving(false);
@@ -52,9 +47,10 @@ export function WorkingHoursForm({ userId, initialSlots }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("workingHours.title")}</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">{t("description")}</p>
         {([0, 1, 2, 3, 4, 5, 6] as const).map((idx) => {
           const entry = slots.find((s) => s.dayOfWeek === idx);
           return (
@@ -65,7 +61,7 @@ export function WorkingHoursForm({ userId, initialSlots }: Props) {
                   checked={!!entry}
                   onChange={() => toggle(idx)}
                 />
-                {t(`days.${idx}`)}
+                {td(`days.${idx}`)}
               </label>
               {entry ? (
                 <>
@@ -75,7 +71,7 @@ export function WorkingHoursForm({ userId, initialSlots }: Props) {
                     onChange={(e) => update(idx, "startTime", e.target.value)}
                     className="w-32"
                   />
-                  <span className="text-sm text-muted-foreground">{t("workingHours.to")}</span>
+                  <span className="text-sm text-muted-foreground">{td("workingHours.to")}</span>
                   <Input
                     type="time"
                     value={entry.endTime}
@@ -84,13 +80,13 @@ export function WorkingHoursForm({ userId, initialSlots }: Props) {
                   />
                 </>
               ) : (
-                <span className="text-sm text-muted-foreground">{t("workingHours.off")}</span>
+                <span className="text-sm text-muted-foreground">{td("workingHours.off")}</span>
               )}
             </div>
           );
         })}
         <Button onClick={save} disabled={saving}>
-          {saved ? t("workingHours.saved") : saving ? t("workingHours.saving") : t("workingHours.saveSchedule")}
+          {saved ? t("saved") : saving ? t("saving") : t("save")}
         </Button>
       </CardContent>
     </Card>

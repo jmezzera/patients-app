@@ -97,7 +97,7 @@ async function main() {
   await prisma.appointmentParticipant.deleteMany({ where: { appointment: { orgId } } });
   await prisma.appointment.deleteMany({ where: { orgId } });
   await prisma.patient.deleteMany({ where: { orgId } });
-  await prisma.workingHours.deleteMany({ where: { orgId } });
+  await prisma.weeklySchedule.deleteMany({ where: { orgId } });
   await prisma.calendarBlock.deleteMany({ where: { orgId } });
   await prisma.metricType.deleteMany({ where: { orgId } });
   await prisma.nutritionPlan.deleteMany({ where: { orgId } });
@@ -132,9 +132,9 @@ async function main() {
   ]);
 
   // ── Doctor working hours (Mon–Fri 09:00–18:00) ──────────────────────────────
-  await prisma.workingHours.createMany({
+  await prisma.weeklySchedule.createMany({
     data: [1, 2, 3, 4, 5].map((dayOfWeek) => ({
-      orgId, doctorId: doctor.id, dayOfWeek, startTime: "09:00", endTime: "18:00",
+      orgId, userId: doctor.id, dayOfWeek, startTime: "09:00", endTime: "18:00",
     })),
   });
 
