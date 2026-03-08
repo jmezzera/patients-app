@@ -6,17 +6,16 @@ import { getSessionActor } from "@/lib/authz";
 import { getPatientProfile, listPatients } from "@/lib/repos/patients";
 import { listNutritionPlans } from "@/lib/repos/nutrition-plans";
 import { db } from "@/lib/db";
-import { ProfileCard } from "@/components/patient/profile-card";
-import { MeasurementTable } from "@/components/metrics/measurement-table";
-import { TrendChart } from "@/components/metrics/trend-chart";
-import { RadarChart } from "@/components/metrics/radar-chart";
-import { pivotMeasurements, type AppointmentMarker, type RawMeasurement } from "@/lib/chart-utils";
-import { EditPatientRecordForm } from "@/components/forms/edit-patient-record-form";
+import { PatientInfoCard } from "@/components/patient/patient-info-card";
+import { PatientProfileTabs } from "@/components/patient/patient-profile-tabs";
+import { MetricsSection } from "@/components/patient/metrics-section";
 import { AddPatientNoteForm } from "@/components/forms/add-patient-note-form";
 import { PatientAppointmentsPanel } from "@/components/appointments/patient-appointments-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageShell } from "@/components/layout/page-shell";
+import { pivotMeasurements, type AppointmentMarker, type RawMeasurement } from "@/lib/chart-utils";
+import type { MeasurementRowData } from "@/components/metrics/measurement-table-client";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -58,6 +57,16 @@ export default async function PatientDetailPage({ params }: Props) {
     },
   }));
 
+  const measurementRows: MeasurementRowData[] = patient.measurementEntries.map((e) => ({
+    id: e.id,
+    measuredAt: e.measuredAt.toISOString(),
+    value: e.value.toString(),
+    metricType: { name: e.metricType.name, unit: e.metricType.unit },
+    source: e.source,
+    appointmentId: e.appointmentId,
+    notes: e.notes,
+  }));
+
   const appointmentMarkers: AppointmentMarker[] = appointments.map((a) => ({
     id: a.id,
     date: new Date(a.scheduledAt).toLocaleDateString(),
@@ -93,60 +102,70 @@ export default async function PatientDetailPage({ params }: Props) {
   const internalNotes = patient.notes.filter((n) => !n.isPublic);
   const canEdit = actor.role === Role.DOCTOR || actor.role === Role.MANAGER;
 
-  return (
-    <PageShell>
-      <h1 className="text-2xl font-semibold">{t("title")}</h1>
+  const scheduleSlots = patient.user?.weeklySchedule ?? [];
 
-      <ProfileCard
+  // ── Tab content ──────────────────────────────────────────────────────────────
+
+  const profileTab = (
+    <>
+      <PatientInfoCard
+        patientId={patient.id}
         fullName={`${patient.firstName} ${patient.lastName}`}
         phone={patient.phone}
-        nutritionPlan={patient.nutritionPlan?.name ?? null}
         assignedDoctor={patient.assignedDoctor?.displayName ?? null}
+        nutritionPlan={patient.nutritionPlan?.name ?? null}
         clinicalSummary={patient.clinicalSummary}
+        color={patient.color}
+        scheduleSlots={scheduleSlots}
+        canEdit={canEdit}
+        nutritionPlans={nutritionPlans}
+        doctors={doctors}
+        defaults={{
+          phone: patient.phone,
+          nutritionPlanId: patient.nutritionPlanId,
+          assignedDoctorId: patient.assignedDoctorId,
+          clinicalSummary: patient.clinicalSummary,
+          color: patient.color,
+        }}
       />
 
-      {patient.user?.weeklySchedule && patient.user.weeklySchedule.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("schedulePreference")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-1 text-sm">
-              {patient.user.weeklySchedule.map((s) => (
-                <li key={s.id} className="flex items-center gap-3">
-                  <span className="w-28 font-medium">
-                    {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][s.dayOfWeek]}
-                  </span>
-                  <span className="text-muted-foreground">{s.startTime} – {s.endTime}</span>
-                </li>
-              ))}
+      {/* Notes — public and private in one card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("notes")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {canEdit && <AddPatientNoteForm patientId={patient.id} />}
+          {patient.notes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("noPublicNotes")}</p>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {patient.notes.map((note) =>
+                note.isPublic ? (
+                  <li key={note.id} className="rounded-md border bg-muted/40 p-2.5">
+                    {note.content}
+                  </li>
+                ) : (
+                  <li
+                    key={note.id}
+                    className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2.5"
+                  >
+                    <span className="mt-0.5 text-amber-500" title={t("internalNote")}>
+                      🔒
+                    </span>
+                    <span>{note.content}</span>
+                  </li>
+                ),
+              )}
             </ul>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
 
-      {canEdit && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("updateRecord")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EditPatientRecordForm
-              patientId={patient.id}
-              nutritionPlans={nutritionPlans}
-              doctors={doctors}
-              defaults={{
-                phone: patient.phone,
-                nutritionPlanId: patient.nutritionPlanId,
-                assignedDoctorId: patient.assignedDoctorId,
-                clinicalSummary: patient.clinicalSummary,
-                color: patient.color,
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
+  const appointmentsTab = (
+    <div className="space-y-4">
       <PatientAppointmentsPanel
         appointments={calendarRows}
         patients={canEdit ? patientOptions : []}
@@ -154,45 +173,6 @@ export default async function PatientDetailPage({ params }: Props) {
         defaultDoctorId={actor.role === Role.DOCTOR ? actor.id : patient.assignedDoctorId ?? undefined}
         defaultPatientIds={[patient.id]}
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("publicNotes")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {canEdit && <AddPatientNoteForm patientId={patient.id} />}
-          {publicNotes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noPublicNotes")}</p>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {publicNotes.map((note) => (
-                <li key={note.id} className="rounded-md border bg-muted/40 p-2">
-                  {note.content}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("internalNotes")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {internalNotes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noInternalNotes")}</p>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {internalNotes.map((note) => (
-                <li key={note.id} className="rounded-md border bg-amber-50 p-2">
-                  {note.content}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
@@ -239,10 +219,43 @@ export default async function PatientDetailPage({ params }: Props) {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
 
-      <MeasurementTable rows={patient.measurementEntries} showAppointmentLinks />
-      <RadarChart rawRows={rawRows} title={t("metricSnapshot")} />
-      <TrendChart data={trendData} series={trendSeries} title={t("historicTrends")} appointments={appointmentMarkers} />
+  const metricsTab = (
+    <MetricsSection
+      rawRows={rawRows}
+      trendData={trendData}
+      trendSeries={trendSeries}
+      appointmentMarkers={appointmentMarkers}
+      measurementRows={measurementRows}
+    />
+  );
+
+  return (
+    <PageShell>
+      <div className="flex items-center gap-3">
+        {patient.color && (
+          <span
+            className="inline-block h-5 w-5 flex-shrink-0 rounded-full ring-2 ring-white shadow"
+            style={{ backgroundColor: patient.color }}
+          />
+        )}
+        <h1 className="text-2xl font-semibold">
+          {patient.firstName} {patient.lastName}
+        </h1>
+      </div>
+
+      <PatientProfileTabs
+        profileTab={profileTab}
+        appointmentsTab={appointmentsTab}
+        metricsTab={metricsTab}
+        labels={{
+          profile: t("tabs.profile"),
+          appointments: t("tabs.appointments"),
+          metrics: t("tabs.metrics"),
+        }}
+      />
     </PageShell>
   );
 }

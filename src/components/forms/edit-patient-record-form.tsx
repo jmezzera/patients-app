@@ -21,9 +21,10 @@ type Props = {
     assignedDoctorId?: string | null;
     color?: string | null;
   };
+  onSuccess?: () => void;
 };
 
-export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defaults }: Props) {
+export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defaults, onSuccess }: Props) {
   const router = useRouter();
   const t = useTranslations("patients.detail.updateForm");
   const tc = useTranslations("common");
@@ -59,6 +60,7 @@ export function EditPatientRecordForm({ patientId, nutritionPlans, doctors, defa
         if (response.ok) {
           setMessage(t("patientRecordUpdated"));
           router.refresh();
+          onSuccess?.();
         } else {
           const data = await response.json().catch(() => ({}));
           setMessage(data.error ?? t("failedUpdate"));

@@ -88,17 +88,32 @@
     "detail": {
       "title": "Detalle del paciente",
       "updateRecord": "Actualizar registro",
+      "editInfo": "Editar información",
+      "cancelEdit": "Cancelar",
       "appointmentCalendar": "Calendario de citas",
       "appointments": "Citas",
+      "notes": "Notas",
+      "internalNote": "Nota interna — no visible para el paciente",
       "publicNotes": "Notas públicas",
       "internalNotes": "Notas internas",
       "uploadedFiles": "Archivos subidos",
       "metricSnapshot": "Instantánea de métricas",
       "historicTrends": "Tendencias históricas",
+      "allMeasurements": "Todas las medidas",
+      "latestValues": "Últimos valores",
+      "measurementsCount": "medidas",
+      "metricsTracked": "métricas registradas",
       "noAppointments": "Sin citas todavía.",
       "noPublicNotes": "Sin notas públicas.",
       "noInternalNotes": "Sin notas internas.",
       "noFiles": "Sin archivos subidos.",
+      "schedulePreference": "Preferencia horaria",
+      "scheduleAppointment": "Programar cita",
+      "tabs": {
+        "profile": "Perfil",
+        "appointments": "Citas",
+        "metrics": "Métricas"
+      },
       "updateForm": {
         "phone": "Teléfono",
         "assignedDoctor": "Médico asignado",
@@ -244,7 +259,8 @@
       "myAppointments": "Mis citas",
       "noAppointments": "Sin citas.",
       "notesFromDoctor": "Notas de tu médico",
-      "viewTrends": "Ver tendencias de medidas →"
+      "viewTrends": "Ver tendencias de medidas →",
+      "schedulePreference": "Preferencia horaria"
     },
     "measurements": {
       "title": "Mis medidas",
@@ -258,7 +274,10 @@
         "notes": "Notas",
         "self": "Autorreporte",
         "doctor": "Médico",
-        "view": "Ver"
+        "view": "Ver",
+        "filterByMetric": "Filtrar por métrica…",
+        "sourceAll": "Todos",
+        "noResults": "No hay medidas que coincidan con los filtros."
       },
       "form": {
         "title": "Registrar medidas",
@@ -279,6 +298,13 @@
       "subtitle": "Medidas históricas a lo largo del tiempo.",
       "metricSnapshot": "Instantánea de métricas",
       "historicTrends": "Tendencias históricas"
+    },
+    "schedulePreference": {
+      "title": "Mi disponibilidad horaria",
+      "description": "Indica a tu equipo médico qué días y horarios te resultan más convenientes. Esto les ayuda a agendar citas en momentos adecuados para ti.",
+      "save": "Guardar preferencias",
+      "saving": "Guardando...",
+      "saved": "¡Guardado!"
     }
   }
 }

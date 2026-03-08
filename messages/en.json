@@ -88,17 +88,32 @@
     "detail": {
       "title": "Patient detail",
       "updateRecord": "Update patient record",
+      "editInfo": "Edit patient info",
+      "cancelEdit": "Cancel",
       "appointmentCalendar": "Appointment calendar",
       "appointments": "Appointments",
+      "notes": "Notes",
+      "internalNote": "Internal note — not visible to patient",
       "publicNotes": "Public notes",
       "internalNotes": "Internal notes",
       "uploadedFiles": "Uploaded files",
       "metricSnapshot": "Metric snapshot",
       "historicTrends": "Historic trends",
+      "allMeasurements": "All measurements",
+      "latestValues": "Latest values",
+      "measurementsCount": "measurements",
+      "metricsTracked": "metrics tracked",
       "noAppointments": "No appointments yet.",
       "noPublicNotes": "No public notes.",
       "noInternalNotes": "No internal notes.",
       "noFiles": "No files uploaded.",
+      "schedulePreference": "Schedule preference",
+      "scheduleAppointment": "Schedule appointment",
+      "tabs": {
+        "profile": "Profile",
+        "appointments": "Appointments",
+        "metrics": "Metrics"
+      },
       "updateForm": {
         "phone": "Phone",
         "assignedDoctor": "Assigned doctor",
@@ -243,6 +258,7 @@
       "internalSubtitle": "Internal users don't have a profile yet.",
       "myAppointments": "My appointments",
       "noAppointments": "No appointments.",
+      "schedulePreference": "Schedule preference",
       "notesFromDoctor": "Notes from your doctor",
       "viewTrends": "View measurement trends →"
     },
@@ -258,7 +274,10 @@
         "notes": "Notes",
         "self": "Self",
         "doctor": "Doctor",
-        "view": "View"
+        "view": "View",
+        "filterByMetric": "Filter by metric…",
+        "sourceAll": "All",
+        "noResults": "No measurements match your filters."
       },
       "form": {
         "title": "Track measurements",
@@ -273,6 +292,13 @@
         "saved": "Measurement saved",
         "failedSave": "Unable to save measurement"
       }
+    },
+    "schedulePreference": {
+      "title": "My schedule preference",
+      "description": "Tell your care team which days and times work best for you. This helps them schedule appointments at convenient times.",
+      "save": "Save preferences",
+      "saving": "Saving...",
+      "saved": "Saved!"
     },
     "trends": {
       "title": "My trends",

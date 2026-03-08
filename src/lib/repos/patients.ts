@@ -148,11 +148,11 @@ export async function addPatientNote(
   actor: SessionActor,
   input: { patientId: string; content: string; isPublic: boolean },
 ) {
-  assertRole(actor, [Role.DOCTOR]);
+  assertRole(actor, [Role.DOCTOR, Role.MANAGER]);
 
   const patient = await db.patient.findFirst({ where: { id: input.patientId, orgId: actor.orgId } });
   if (!patient) throw new Error("Patient not found");
-  if (patient.assignedDoctorId !== actor.id) throw new Error("Forbidden");
+  if (actor.role === Role.DOCTOR && patient.assignedDoctorId !== actor.id) throw new Error("Forbidden");
 
   const note = await db.note.create({
     data: {
