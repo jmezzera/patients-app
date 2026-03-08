@@ -173,8 +173,8 @@ export function MeasurementTableClient({ rows, showAppointmentLinks = false }: P
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
-            size="icon"
-            className="h-7 w-7"
+            size="sm"
+            className="h-7 w-7 p-0"
             disabled={safePage === 0}
             onClick={() => setPage((p) => p - 1)}
           >
@@ -185,8 +185,8 @@ export function MeasurementTableClient({ rows, showAppointmentLinks = false }: P
           </span>
           <Button
             variant="ghost"
-            size="icon"
-            className="h-7 w-7"
+            size="sm"
+            className="h-7 w-7 p-0"
             disabled={safePage >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
           >

@@ -67,8 +67,8 @@ export function PatientInfoCard({
         {canEdit && (
           <Button
             variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            size="sm"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             onClick={() => setEditing((v) => !v)}
             title={editing ? td("cancelEdit") : td("editInfo")}
           >
