@@ -106,7 +106,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
       <aside className="hidden md:flex w-60 flex-shrink-0 flex-col bg-primary">
         <div className="flex h-16 items-center border-b border-white/10 px-5">
           <Link href="/dashboard" className="text-base font-bold tracking-tight text-white">
-            Jamil Cesin
+            Jami
           </Link>
         </div>
         <NavLinks items={navItems} />
@@ -116,7 +116,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
       {/* Mobile top bar — hidden on desktop */}
       <header className="md:hidden flex h-14 flex-shrink-0 items-center justify-between bg-primary px-4">
         <Link href="/dashboard" className="text-base font-bold text-white">
-          Jamil Cesin
+          Jami
         </Link>
         <button
           type="button"
@@ -139,7 +139,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
           {/* Panel */}
           <aside className="absolute inset-y-0 left-0 flex w-72 flex-col bg-primary shadow-2xl">
             <div className="flex h-14 items-center justify-between border-b border-white/10 px-5">
-              <span className="text-base font-bold text-white">Jamil Cesin</span>
+              <span className="text-base font-bold text-white">Jami</span>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
