@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
@@ -34,6 +35,7 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             <AppShell>{children}</AppShell>
             <SpeedInsights />
+            <Analytics />
           </NextIntlClientProvider>
         </body>
       </html>
