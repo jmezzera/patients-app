@@ -106,7 +106,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
       <aside className="hidden md:flex w-60 flex-shrink-0 flex-col bg-primary">
         <div className="flex h-16 items-center border-b border-white/10 px-5">
           <Link href="/dashboard" className="text-base font-bold tracking-tight text-white">
-            Jami
+            Preview
           </Link>
         </div>
         <NavLinks items={navItems} />
