@@ -18,7 +18,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-background">
         <header className="flex items-center justify-between border-b bg-white px-4 py-4 md:px-6">
-          <span className="text-lg font-bold text-primary">Jami</span>
+          <span className="text-lg font-bold text-primary">Preview</span>
           <div className="flex items-center gap-3 text-sm">
             <Link
               href={signInRoute}
