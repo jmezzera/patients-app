@@ -95,6 +95,7 @@ model Patient {
   nutritionPlanId  String?
   clinicalSummary  String?
   color            String?
+  isActive         Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

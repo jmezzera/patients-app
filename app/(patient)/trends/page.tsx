@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSessionActor } from "@/lib/authz";
 import { listMeasurements } from "@/lib/repos/measurements";
@@ -11,6 +11,10 @@ import { pivotMeasurements, type AppointmentMarker, type RawMeasurement } from "
 export default async function TrendsPage() {
   const actor = await getSessionActor();
   const t = await getTranslations("patient.trends");
+
+  if (!actor.isActive) {
+    redirect("/me");
+  }
 
   if (!actor.patientId) {
     notFound();

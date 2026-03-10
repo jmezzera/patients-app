@@ -7,6 +7,7 @@ import { getPatientProfile, listPatients } from "@/lib/repos/patients";
 import { listNutritionPlans } from "@/lib/repos/nutrition-plans";
 import { db } from "@/lib/db";
 import { PatientInfoCard } from "@/components/patient/patient-info-card";
+import { ActivatePatientToggle } from "@/components/patient/activate-patient-toggle";
 import { PatientProfileTabs } from "@/components/patient/patient-profile-tabs";
 import { MetricsSection } from "@/components/patient/metrics-section";
 import { AddPatientNoteForm } from "@/components/forms/add-patient-note-form";
@@ -234,16 +235,21 @@ export default async function PatientDetailPage({ params }: Props) {
 
   return (
     <PageShell>
-      <div className="flex items-center gap-3">
-        {patient.color && (
-          <span
-            className="inline-block h-5 w-5 flex-shrink-0 rounded-full ring-2 ring-white shadow"
-            style={{ backgroundColor: patient.color }}
-          />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {patient.color && (
+            <span
+              className="inline-block h-5 w-5 flex-shrink-0 rounded-full ring-2 ring-white shadow"
+              style={{ backgroundColor: patient.color }}
+            />
+          )}
+          <h1 className="text-2xl font-semibold">
+            {patient.firstName} {patient.lastName}
+          </h1>
+        </div>
+        {canEdit && (
+          <ActivatePatientToggle patientId={patient.id} isActive={patient.isActive} />
         )}
-        <h1 className="text-2xl font-semibold">
-          {patient.firstName} {patient.lastName}
-        </h1>
       </div>
 
       <PatientProfileTabs

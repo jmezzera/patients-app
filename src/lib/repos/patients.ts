@@ -57,6 +57,34 @@ export async function getPatientProfile(actor: SessionActor, patientId: string) 
   });
 }
 
+export async function setPatientActive(
+  actor: SessionActor,
+  patientId: string,
+  isActive: boolean,
+) {
+  assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
+
+  const before = await db.patient.findFirst({ where: { id: patientId, orgId: actor.orgId } });
+  if (!before) throw new Error("Patient not found");
+
+  const after = await db.patient.update({
+    where: { id: patientId },
+    data: { isActive },
+  });
+
+  await recordAuditEvent({
+    orgId: actor.orgId,
+    actorId: actor.id,
+    action: isActive ? "patient.activate" : "patient.deactivate",
+    entityType: "patient",
+    entityId: patientId,
+    beforeJson: before,
+    afterJson: after,
+  });
+
+  return after;
+}
+
 export async function updatePatientProfile(
   actor: SessionActor,
   patientId: string,

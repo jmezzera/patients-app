@@ -8,6 +8,7 @@ export type SessionActor = {
   orgId: string;
   role: Role;
   patientId: string | null;
+  isActive: boolean;
 };
 
 const DEFAULT_ORG_ID = "org_default";
@@ -116,6 +117,7 @@ export async function getSessionActor(): Promise<SessionActor> {
     orgId: user.orgId,
     role: user.role,
     patientId: user.patientProfile?.id ?? null,
+    isActive: user.patientProfile?.isActive ?? false,
   };
 }
 
