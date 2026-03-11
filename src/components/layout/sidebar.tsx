@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Menu, X,
   LayoutDashboard, Users, CalendarDays, BarChart3, Clock, Activity,
-  Leaf, User, Ruler, TrendingUp,
+  Leaf, User, Ruler, TrendingUp, MessageSquare,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
@@ -15,7 +15,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard, Users, CalendarDays, BarChart3, Clock, Activity,
-  Leaf, User, Ruler, TrendingUp,
+  Leaf, User, Ruler, TrendingUp, MessageSquare,
 };
 
 export type NavItem = {

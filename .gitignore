@@ -13,3 +13,5 @@ prisma/migrations
 
 # Claude Code local settings
 /.claude/
+.vercel
+.env*.local

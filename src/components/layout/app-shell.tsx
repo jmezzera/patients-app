@@ -69,6 +69,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         { href: "/me", icon: "User", label: t("myProfile") },
         { href: "/measurements", icon: "Ruler", label: t("measurements") },
         { href: "/trends", icon: "TrendingUp", label: t("trends") },
+        { href: "/chat", icon: "MessageSquare", label: t("chat"), isExternal: true },
       ];
 
   return (
