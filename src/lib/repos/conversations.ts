@@ -8,6 +8,14 @@ function assertActivePatient(actor: SessionActor) {
   }
 }
 
+function assertStaff(actor: SessionActor) {
+  if (actor.role !== Role.DOCTOR && actor.role !== Role.MANAGER) {
+    throw new Error("Forbidden");
+  }
+}
+
+// ─── Patient conversations ────────────────────────────────────────────────────
+
 export async function listConversations(actor: SessionActor) {
   assertActivePatient(actor);
   return db.conversation.findMany({
@@ -35,6 +43,38 @@ export async function createConversation(actor: SessionActor) {
     data: { orgId: actor.orgId, patientId: actor.patientId! },
   });
 }
+
+// ─── Staff conversations ──────────────────────────────────────────────────────
+
+export async function listStaffConversations(actor: SessionActor) {
+  assertStaff(actor);
+  return db.conversation.findMany({
+    where: { orgId: actor.orgId, userId: actor.id },
+    orderBy: { updatedAt: "desc" },
+    include: {
+      messages: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+  });
+}
+
+export async function getStaffConversation(actor: SessionActor, conversationId: string) {
+  assertStaff(actor);
+  return db.conversation.findFirst({
+    where: { id: conversationId, orgId: actor.orgId, userId: actor.id },
+    include: {
+      messages: { orderBy: { createdAt: "asc" } },
+    },
+  });
+}
+
+export async function createStaffConversation(actor: SessionActor) {
+  assertStaff(actor);
+  return db.conversation.create({
+    data: { orgId: actor.orgId, userId: actor.id },
+  });
+}
+
+// ─── Shared ───────────────────────────────────────────────────────────────────
 
 export async function appendMessage(conversationId: string, role: string, content: string) {
   await db.$transaction([

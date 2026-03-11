@@ -14,6 +14,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["react-markdown", "remark-gfm"],
   experimental: {
     typedRoutes: true,
   },

@@ -52,6 +52,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         { href: "/patients", icon: "Users", label: t("patients") },
         { href: "/appointments", icon: "CalendarDays", label: t("appointments") },
         { href: "/stats", icon: "BarChart3", label: t("stats"), isExternal: true },
+        { href: "/assistant", icon: "MessageSquare", label: t("chat") },
         ...(role === Role.DOCTOR
           ? [
               { href: "/availability", icon: "Clock", label: t("availability"), isExternal: true },

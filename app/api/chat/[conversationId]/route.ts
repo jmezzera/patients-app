@@ -2,6 +2,10 @@ import { streamText, stepCountIs } from "ai";
 import { getSessionActor } from "@/lib/authz";
 import { getConversation, appendMessage } from "@/lib/repos/conversations";
 import { CHAT_MODEL, createOrchestrator } from "@/lib/agents/orchestrator";
+import { createLogger } from "@/lib/logger";
+import { aiLogger } from "@/lib/ai-logger";
+
+const log = createLogger("chat");
 
 export const maxDuration = 60;
 
@@ -9,19 +13,19 @@ type Props = { params: Promise<{ conversationId: string }> };
 
 export async function POST(request: Request, { params }: Props) {
   const { conversationId } = await params;
-  console.log(`[chat] POST /api/chat/${conversationId}`);
+  log.info("POST request", { conversationId });
 
   try {
     const actor = await getSessionActor();
 
     if (!actor.patientId) {
-      console.warn(`[chat] Forbidden — user has no patientId`);
+      log.warn("Forbidden — user has no patientId", { userId: actor.id });
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
     }
 
     const conversation = await getConversation(actor, conversationId);
     if (!conversation) {
-      console.warn(`[chat] Conversation ${conversationId} not found for patient ${actor.patientId}`);
+      log.warn("Conversation not found", { conversationId, patientId: actor.patientId });
       return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     }
 
@@ -31,7 +35,7 @@ export async function POST(request: Request, { params }: Props) {
 
     const lastMsg = incomingMessages[incomingMessages.length - 1];
     if (!lastMsg || lastMsg.role !== "user") {
-      console.warn(`[chat] Invalid message — last message not from user`);
+      log.warn("Invalid message — last message not from user");
       return new Response(JSON.stringify({ error: "Invalid message" }), { status: 400 });
     }
 
@@ -44,7 +48,8 @@ export async function POST(request: Request, { params }: Props) {
       return new Response(JSON.stringify({ error: "Empty message" }), { status: 400 });
     }
 
-    console.log(`[chat] User message (${userText.length} chars): "${userText.slice(0, 80)}${userText.length > 80 ? "…" : ""}"`);
+    // User message content is sensitive — debug level only
+    log.debug("user message", { conversationId, chars: userText.length, text: userText });
 
     // Save user message
     await appendMessage(conversationId, "user", userText);
@@ -56,7 +61,7 @@ export async function POST(request: Request, { params }: Props) {
       content: m.content,
     }));
 
-    console.log(`[chat] History: ${modelMessages.length} messages — starting orchestrator`);
+    log.info("starting orchestrator", { conversationId, historyLength: modelMessages.length });
 
     // Orchestrator: routes to nutritionist or schedule manager as needed
     const { system, tools } = createOrchestrator(actor, actor.patientId);
@@ -67,27 +72,12 @@ export async function POST(request: Request, { params }: Props) {
       tools,
       stopWhen: stepCountIs(10),
       messages: modelMessages,
-      onError: ({ error }) => {
-        console.error(`[chat] streamText error:`, error);
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: "patient-chat:orchestrator",
+        integrations: [aiLogger],
       },
-      onStepFinish: ({ stepNumber, toolCalls, toolResults, text, finishReason }) => {
-        if (toolCalls.length) {
-          for (const tc of toolCalls) {
-            console.log(`[chat] Step ${stepNumber} tool call: ${tc.toolName}`, JSON.stringify(tc.input).slice(0, 200));
-          }
-        }
-        if (toolResults.length) {
-          for (const tr of toolResults) {
-            const preview = JSON.stringify("output" in tr ? tr.output : tr).slice(0, 200);
-            console.log(`[chat] Step ${stepNumber} tool result [${tr.toolName}]: ${preview}`);
-          }
-        }
-        if (text) {
-          console.log(`[chat] Step ${stepNumber} text (${finishReason}): "${text.slice(0, 120)}${text.length > 120 ? "…" : ""}"`);
-        }
-      },
-      onFinish: async ({ text, usage, finishReason }) => {
-        console.log(`[chat] Finished — reason=${finishReason} tokens=${JSON.stringify(usage)}`);
+      onFinish: async ({ text }) => {
         if (text) await appendMessage(conversationId, "assistant", text);
       },
     });
@@ -95,12 +85,12 @@ export async function POST(request: Request, { params }: Props) {
     return result.toUIMessageStreamResponse({
       onError: (error) => {
         const msg = error instanceof Error ? error.message : JSON.stringify(error);
-        console.error(`[chat] Stream error forwarded to client:`, msg);
+        log.error("stream error forwarded to client", { error: msg });
         return msg;
       },
     });
   } catch (error) {
-    console.error(`[chat] Error:`, error);
+    log.error("unhandled error", { error });
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unexpected error" }),
       { status: 500 },

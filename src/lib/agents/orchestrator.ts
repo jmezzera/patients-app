@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createNutritionistTools } from "./tools/nutritionist-tools";
 import { createScheduleTools } from "./tools/schedule-tools";
 import type { SessionActor } from "@/lib/authz";
+import { aiLogger } from "@/lib/ai-logger";
 
 const gateway = createGateway({ apiKey: process.env.VERCEL_AI_TEST_KEY });
 
@@ -86,6 +87,11 @@ export function createOrchestrator(actor: SessionActor, patientId: string) {
           messages: [{ role: "user", content: question }],
           tools: nutritionistTools,
           stopWhen: stepCountIs(4),
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId: "patient-chat:nutritionist",
+            integrations: [aiLogger],
+          },
         });
         return text;
       },
@@ -106,6 +112,11 @@ export function createOrchestrator(actor: SessionActor, patientId: string) {
           messages: [{ role: "user", content: question }],
           tools: scheduleTools,
           stopWhen: stepCountIs(4),
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId: "patient-chat:schedule",
+            integrations: [aiLogger],
+          },
         });
         return text;
       },
