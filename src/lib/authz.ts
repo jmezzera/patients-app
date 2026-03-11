@@ -1,6 +1,9 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
 import { db } from "@/lib/db";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("authz");
 
 export type SessionActor = {
   id: string;
@@ -15,7 +18,7 @@ const DEFAULT_ORG_ID = "org_default";
 
 function parseRole(value: unknown): Role {
   if (typeof value !== "string") {
-    console.warn("[authz] Missing role in Clerk metadata; defaulting to PATIENT", { value });
+    log.warn("Missing role in Clerk metadata; defaulting to PATIENT", { value });
     return Role.PATIENT;
   }
 
@@ -30,7 +33,7 @@ function parseRole(value: unknown): Role {
     return Role.DOCTOR;
   }
 
-  console.warn("[authz] Unrecognized role in Clerk metadata; defaulting to PATIENT", { value });
+  log.warn("Unrecognized role in Clerk metadata; defaulting to PATIENT", { value });
   return Role.PATIENT;
 }
 

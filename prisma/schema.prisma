@@ -78,6 +78,7 @@ model User {
   weeklySchedule   WeeklySchedule[]
   calendarBlocks   CalendarBlock[]
   audits           AuditEvent[]
+  conversations    Conversation[]
 
   @@index([orgId, role])
 }
@@ -264,15 +265,18 @@ model CalendarBlock {
 model Conversation {
   id        String        @id @default(cuid())
   orgId     String
-  patientId String
+  patientId String?
+  userId    String?
   title     String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  patient  Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient  Patient?      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  user     User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages ChatMessage[]
 
   @@index([orgId, patientId])
+  @@index([orgId, userId])
 }
 
 model ChatMessage {
