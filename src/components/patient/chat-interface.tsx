@@ -16,7 +16,7 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: `/api/chat/${conversationId}` }),
     messages: initialMessages,
   });
@@ -30,7 +30,7 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
   function submit() {
     const text = input.trim();
     if (!text || isLoading) return;
-    sendMessage({ text });
+    sendMessage({ text, metadata: { createdAt: new Date().toISOString() } });
     setInput("");
   }
 
@@ -63,10 +63,15 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
 
           if (!text) return null;
 
+          const rawTime = (msg.metadata as { createdAt?: string } | undefined)?.createdAt;
+          const time = rawTime
+            ? new Date(rawTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : null;
+
           return (
             <div
               key={msg.id}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex flex-col gap-0.5 ${msg.role === "user" ? "items-end" : "items-start"}`}
             >
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap ${
@@ -77,6 +82,9 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
               >
                 {text}
               </div>
+              {time && (
+                <span className="text-[10px] text-muted-foreground px-1">{time}</span>
+              )}
             </div>
           );
         })}
@@ -84,6 +92,13 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
           <div className="flex justify-start">
             <div className="bg-muted rounded-2xl px-4 py-2 text-sm text-muted-foreground animate-pulse">
               Thinking…
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="flex justify-start">
+            <div className="bg-destructive/10 text-destructive rounded-2xl px-4 py-2 text-sm">
+              Something went wrong. Please try again.
             </div>
           </div>
         )}

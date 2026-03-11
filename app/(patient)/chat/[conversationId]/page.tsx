@@ -25,6 +25,7 @@ export default async function ConversationPage({ params }: Props) {
     id: m.id,
     role: m.role as "user" | "assistant",
     parts: [{ type: "text" as const, text: m.content }],
+    metadata: { createdAt: m.createdAt.toISOString() },
   }));
 
   const title = conversation.title ?? new Date(conversation.createdAt).toLocaleDateString();

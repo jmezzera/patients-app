@@ -1,66 +1,27 @@
-import { createGateway } from "@ai-sdk/gateway";
-import { streamText } from "ai";
-
-const gateway = createGateway({ apiKey: process.env.VERCEL_AI_API_KEY });
+import { streamText, stepCountIs } from "ai";
 import { getSessionActor } from "@/lib/authz";
 import { getConversation, appendMessage } from "@/lib/repos/conversations";
-import { getPatientProfile } from "@/lib/repos/patients";
+import { CHAT_MODEL, createOrchestrator } from "@/lib/agents/orchestrator";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 type Props = { params: Promise<{ conversationId: string }> };
 
-function buildSystemPrompt(
-  patient: NonNullable<Awaited<ReturnType<typeof getPatientProfile>>>,
-): string {
-  const lines = [
-    `You are a helpful nutrition and wellness assistant for ${patient.firstName} ${patient.lastName}.`,
-    `You are part of a nutritionist practice platform. Help the patient with questions about their nutrition plan, wellness habits, measurements, and upcoming appointments.`,
-    "",
-    "Patient context:",
-    `- Name: ${patient.firstName} ${patient.lastName}`,
-  ];
-
-  if (patient.nutritionPlan) {
-    lines.push(`- Nutrition Plan: ${patient.nutritionPlan.name}`);
-  }
-
-  if (patient.clinicalSummary) {
-    lines.push(`- Clinical Notes: ${patient.clinicalSummary}`);
-  }
-
-  const recent = patient.measurementEntries.slice(0, 5);
-  if (recent.length > 0) {
-    lines.push("- Recent measurements:");
-    for (const m of recent) {
-      const unit = m.metricType?.unit ?? "";
-      const date = new Date(m.measuredAt).toLocaleDateString();
-      lines.push(`  • ${m.metricType?.name ?? "Unknown"}: ${m.value} ${unit} (${date})`);
-    }
-  }
-
-  lines.push(
-    "",
-    "Guidelines:",
-    "- Be supportive, encouraging, and concise.",
-    "- Do not provide medical diagnoses or replace professional medical advice.",
-    "- For specific health concerns, remind the patient to speak with their healthcare provider.",
-  );
-
-  return lines.join("\n");
-}
-
 export async function POST(request: Request, { params }: Props) {
+  const { conversationId } = await params;
+  console.log(`[chat] POST /api/chat/${conversationId}`);
+
   try {
-    const { conversationId } = await params;
     const actor = await getSessionActor();
 
     if (!actor.patientId) {
+      console.warn(`[chat] Forbidden — user has no patientId`);
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
     }
 
     const conversation = await getConversation(actor, conversationId);
     if (!conversation) {
+      console.warn(`[chat] Conversation ${conversationId} not found for patient ${actor.patientId}`);
       return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
     }
 
@@ -68,9 +29,9 @@ export async function POST(request: Request, { params }: Props) {
     const incomingMessages: Array<{ role: string; parts?: Array<{ type: string; text?: string }> }> =
       body.messages ?? [];
 
-    // Extract text from the last user message sent by the client
     const lastMsg = incomingMessages[incomingMessages.length - 1];
     if (!lastMsg || lastMsg.role !== "user") {
+      console.warn(`[chat] Invalid message — last message not from user`);
       return new Response(JSON.stringify({ error: "Invalid message" }), { status: 400 });
     }
 
@@ -83,32 +44,63 @@ export async function POST(request: Request, { params }: Props) {
       return new Response(JSON.stringify({ error: "Empty message" }), { status: 400 });
     }
 
-    // Save user message to DB
+    console.log(`[chat] User message (${userText.length} chars): "${userText.slice(0, 80)}${userText.length > 80 ? "…" : ""}"`);
+
+    // Save user message
     await appendMessage(conversationId, "user", userText);
 
-    // Reload conversation with the new message included
+    // Load full conversation history from DB (includes the message just saved)
     const updated = await getConversation(actor, conversationId);
     const modelMessages = (updated?.messages ?? []).map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     }));
 
-    const patient = await getPatientProfile(actor, actor.patientId);
-    if (!patient) {
-      return new Response(JSON.stringify({ error: "Patient not found" }), { status: 404 });
-    }
+    console.log(`[chat] History: ${modelMessages.length} messages — starting orchestrator`);
+
+    // Orchestrator: routes to nutritionist or schedule manager as needed
+    const { system, tools } = createOrchestrator(actor, actor.patientId);
 
     const result = streamText({
-      model: gateway("openai/gpt-4o-mini"),
-      system: buildSystemPrompt(patient),
+      model: CHAT_MODEL,
+      system,
+      tools,
+      stopWhen: stepCountIs(10),
       messages: modelMessages,
-      onFinish: async ({ text }) => {
-        await appendMessage(conversationId, "assistant", text);
+      onError: ({ error }) => {
+        console.error(`[chat] streamText error:`, error);
+      },
+      onStepFinish: ({ stepNumber, toolCalls, toolResults, text, finishReason }) => {
+        if (toolCalls.length) {
+          for (const tc of toolCalls) {
+            console.log(`[chat] Step ${stepNumber} tool call: ${tc.toolName}`, JSON.stringify(tc.input).slice(0, 200));
+          }
+        }
+        if (toolResults.length) {
+          for (const tr of toolResults) {
+            const preview = JSON.stringify("output" in tr ? tr.output : tr).slice(0, 200);
+            console.log(`[chat] Step ${stepNumber} tool result [${tr.toolName}]: ${preview}`);
+          }
+        }
+        if (text) {
+          console.log(`[chat] Step ${stepNumber} text (${finishReason}): "${text.slice(0, 120)}${text.length > 120 ? "…" : ""}"`);
+        }
+      },
+      onFinish: async ({ text, usage, finishReason }) => {
+        console.log(`[chat] Finished — reason=${finishReason} tokens=${JSON.stringify(usage)}`);
+        if (text) await appendMessage(conversationId, "assistant", text);
       },
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      onError: (error) => {
+        const msg = error instanceof Error ? error.message : JSON.stringify(error);
+        console.error(`[chat] Stream error forwarded to client:`, msg);
+        return msg;
+      },
+    });
   } catch (error) {
+    console.error(`[chat] Error:`, error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unexpected error" }),
       { status: 500 },
