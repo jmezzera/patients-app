@@ -27,18 +27,22 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function submit() {
     const text = input.trim();
     if (!text || isLoading) return;
     sendMessage({ text });
     setInput("");
   }
 
+  function handleSubmit(e: { preventDefault(): void }) {
+    e.preventDefault();
+    submit();
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as unknown as React.FormEvent);
+      submit();
     }
   }
 
@@ -97,7 +101,7 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
           className="resize-none flex-1"
           disabled={isLoading}
         />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+        <Button type="submit" className="h-10 w-10 p-0 shrink-0" disabled={isLoading || !input.trim()}>
           <SendHorizonal className="h-4 w-4" />
         </Button>
       </form>
