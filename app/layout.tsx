@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
+import { PostHogProvider } from './providers'
 
 import "./globals.css";
 
@@ -32,11 +33,13 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang={locale} className={jakarta.variable}>
         <body className="antialiased">
+        <PostHogProvider>
           <NextIntlClientProvider messages={messages}>
             <AppShell>{children}</AppShell>
             <SpeedInsights />
             <Analytics />
           </NextIntlClientProvider>
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>

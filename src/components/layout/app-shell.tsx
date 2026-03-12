@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
+
 import { db } from "@/lib/db";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { Sidebar, type NavItem } from "@/components/layout/sidebar";

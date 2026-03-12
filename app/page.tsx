@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FeatureFlagBanner } from "@/components/feature-flag-banner";
 
 const signInRoute = "/sign-in" as Route;
 const signUpRoute = "/sign-up" as Route;
@@ -14,7 +15,8 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-16">
-      <Card className="rounded-2xl">
+      <FeatureFlagBanner />
+      <Card className="rounded-2xl mt-4">
         <CardHeader>
         <p className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
           {t("tagline")}
