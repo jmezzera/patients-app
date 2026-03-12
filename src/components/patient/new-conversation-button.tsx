@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -10,8 +11,9 @@ type Props = {
   label?: string;
 };
 
-export function NewConversationButton({ variant = "default", label = "New chat" }: Props) {
+export function NewConversationButton({ variant = "default", label }: Props) {
   const router = useRouter();
+  const t = useTranslations("chat");
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -28,7 +30,7 @@ export function NewConversationButton({ variant = "default", label = "New chat" 
   return (
     <Button variant={variant} size="sm" onClick={handleClick} disabled={loading}>
       <Plus className="h-4 w-4 mr-1" />
-      {loading ? "Creating…" : label}
+      {loading ? t("creating") : (label ?? t("newChat"))}
     </Button>
   );
 }

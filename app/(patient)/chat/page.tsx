@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MessageSquare, Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { MessageSquare } from "lucide-react";
 import { getSessionActor } from "@/lib/authz";
 import { listConversations } from "@/lib/repos/conversations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { NewConversationButton } from "@/components/patient/new-conversation-button";
 
 export default async function ChatListPage() {
@@ -14,25 +15,29 @@ export default async function ChatListPage() {
   }
 
   const conversations = await listConversations(actor);
+  const [t, tc] = await Promise.all([
+    getTranslations("patient.chat"),
+    getTranslations("chat"),
+  ]);
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">My Chats</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Ask your nutrition assistant anything.
+            {t("subtitle")}
           </p>
         </div>
-        <NewConversationButton />
+        <NewConversationButton label={tc("newChat")} />
       </div>
 
       {conversations.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <MessageSquare className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No conversations yet.</p>
-            <NewConversationButton variant="outline" label="Start your first chat" />
+            <p className="text-sm text-muted-foreground">{tc("noConversations")}</p>
+            <NewConversationButton variant="outline" label={tc("startFirst")} />
           </CardContent>
         </Card>
       ) : (

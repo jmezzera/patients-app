@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { MessageSquare } from "lucide-react";
 import { Role } from "@prisma/client";
 import { getSessionActor } from "@/lib/authz";
@@ -14,30 +15,34 @@ export default async function AssistantPage() {
   }
 
   const conversations = await listStaffConversations(actor);
+  const [t, tc] = await Promise.all([
+    getTranslations("assistant"),
+    getTranslations("chat"),
+  ]);
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Practice Assistant</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Ask about patients, appointments, and metric trends.
+            {t("subtitle")}
           </p>
         </div>
-        <NewStaffConversationButton />
+        <NewStaffConversationButton label={tc("newChat")} />
       </div>
 
       {conversations.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <MessageSquare className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No conversations yet.</p>
-            <NewStaffConversationButton variant="outline" label="Start your first chat" />
+            <p className="text-sm text-muted-foreground">{tc("noConversations")}</p>
+            <NewStaffConversationButton variant="outline" label={tc("startFirst")} />
           </CardContent>
         </Card>
       ) : (
         <ul className="space-y-2">
-          {conversations.map((c) => {
+          {conversations.map((c: (typeof conversations)[number]) => {
             const preview = c.messages[0]?.content;
             const title = c.title ?? new Date(c.createdAt).toLocaleDateString();
             return (

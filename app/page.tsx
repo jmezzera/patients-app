@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { getTranslations } from "next-intl/server";
 import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,20 +10,20 @@ const signUpRoute = "/sign-up" as Route;
 
 export default async function HomePage() {
   const { userId } = await auth();
+  const t = await getTranslations("home");
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-16">
       <Card className="rounded-2xl">
         <CardHeader>
         <p className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-          Nutrition System of Record
+          {t("tagline")}
         </p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight">
-          Jami Care Platform
+          {t("title")}
         </h1>
         <p className="mt-3 max-w-2xl text-base text-muted-foreground">
-          Record appointment outcomes, upload nutrition plans, and track patient
-          measurement trends in one secure workspace.
+          {t("description")}
         </p>
         </CardHeader>
 
@@ -31,19 +32,19 @@ export default async function HomePage() {
             {userId ? (
               <>
                 <Button asChild>
-                  <Link href="/dashboard">Open dashboard</Link>
+                  <Link href="/dashboard">{t("openDashboard")}</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/patients/me">View patient portal</Link>
+                  <Link href="/patients/me">{t("viewPortal")}</Link>
                 </Button>
               </>
             ) : (
               <>
                 <Button asChild>
-                  <Link href={signInRoute}>Sign in</Link>
+                  <Link href={signInRoute}>{t("signIn")}</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href={signUpRoute}>Sign up</Link>
+                  <Link href={signUpRoute}>{t("signUp")}</Link>
                 </Button>
               </>
             )}
@@ -53,25 +54,25 @@ export default async function HomePage() {
       <section className="mt-6 grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Clinician workflow</CardTitle>
+            <CardTitle className="text-sm">{t("features.clinician.title")}</CardTitle>
             <CardDescription>
-            Capture appointment metrics, external plan files, and chart notes.
+              {t("features.clinician.description")}
             </CardDescription>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Patient tracking</CardTitle>
+            <CardTitle className="text-sm">{t("features.patient.title")}</CardTitle>
             <CardDescription>
-            Patients self-report measurements and review progress trends.
+              {t("features.patient.description")}
             </CardDescription>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Secure records</CardTitle>
+            <CardTitle className="text-sm">{t("features.secure.title")}</CardTitle>
             <CardDescription>
-            Role-aware access plus audit events for every write operation.
+              {t("features.secure.description")}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -79,6 +80,3 @@ export default async function HomePage() {
     </main>
   );
 }
-
-
-// async function PublicDashboard() {}

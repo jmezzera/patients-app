@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AppointmentStatus } from "@prisma/client";
 import {
   differenceInYears,
@@ -41,11 +42,6 @@ type Filters = {
 
 const ALL_STATUSES = [AppointmentStatus.BOOKED, AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED];
 const DEFAULT_STATUSES: AppointmentStatus[] = [AppointmentStatus.BOOKED, AppointmentStatus.COMPLETED];
-const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  BOOKED: "Booked",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
 
 const EMPTY_FILTERS: Filters = {
   patientIds: [],
@@ -55,17 +51,11 @@ const EMPTY_FILTERS: Filters = {
   maxAge: "",
 };
 
-const VIEWS: { key: View; label: string }[] = [
-  { key: "month", label: "Month" },
-  { key: "week", label: "Week" },
-  { key: "day", label: "Day" },
-];
-
-function statusBadge(status: AppointmentStatus) {
-  if (status === AppointmentStatus.COMPLETED) return <Badge>Completed</Badge>;
+function statusBadge(status: AppointmentStatus, labels: Record<AppointmentStatus, string>) {
+  if (status === AppointmentStatus.COMPLETED) return <Badge>{labels.COMPLETED}</Badge>;
   if (status === AppointmentStatus.CANCELLED)
-    return <Badge className="border-red-300 bg-red-100 text-red-700">Cancelled</Badge>;
-  return <Badge variant="outline">Booked</Badge>;
+    return <Badge className="border-red-300 bg-red-100 text-red-700">{labels.CANCELLED}</Badge>;
+  return <Badge variant="outline">{labels.BOOKED}</Badge>;
 }
 
 function PatientCell({
@@ -160,6 +150,7 @@ function PatientCombobox({
   selectedIds: string[];
   onChange: (ids: string[]) => void;
 }) {
+  const t = useTranslations("appointments.view");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -182,11 +173,11 @@ function PatientCombobox({
 
   const label =
     selectedIds.length === 0
-      ? "All patients"
+      ? t("allPatients")
       : selectedIds.length === 1
         ? (() => {
             const p = patients.find((p) => p.id === selectedIds[0]);
-            return p ? `${p.firstName} ${p.lastName}` : "1 patient";
+            return p ? `${p.firstName} ${p.lastName}` : `1 patient`;
           })()
         : `${selectedIds.length} patients`;
 
@@ -209,7 +200,7 @@ function PatientCombobox({
             <input
               autoFocus
               type="text"
-              placeholder="Search patients…"
+              placeholder={t("searchPatients")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 w-full rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -240,7 +231,7 @@ function PatientCombobox({
               );
             })}
             {filteredPatients.length === 0 && (
-              <p className="px-3 py-2 text-sm text-muted-foreground">No patients found</p>
+              <p className="px-3 py-2 text-sm text-muted-foreground">{t("noPatientsFound")}</p>
             )}
           </div>
           {selectedIds.length > 0 && (
@@ -250,7 +241,7 @@ function PatientCombobox({
                 onClick={() => onChange([])}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
-                Clear selection
+                {t("clearSelection")}
               </button>
             </div>
           )}
@@ -267,8 +258,16 @@ function StatusMultiselect({
   selected: AppointmentStatus[];
   onChange: (statuses: AppointmentStatus[]) => void;
 }) {
+  const t = useTranslations("appointments.view");
+  const tc = useTranslations("common.status");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const STATUS_LABELS: Record<AppointmentStatus, string> = {
+    BOOKED: tc("booked"),
+    COMPLETED: tc("completed"),
+    CANCELLED: tc("cancelled"),
+  };
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -284,9 +283,9 @@ function StatusMultiselect({
 
   const label =
     selected.length === ALL_STATUSES.length
-      ? "All statuses"
+      ? t("allStatuses")
       : selected.length === 0
-        ? "No statuses"
+        ? t("noStatuses")
         : selected.map((s) => STATUS_LABELS[s]).join(", ");
 
   return (
@@ -349,6 +348,22 @@ export function AppointmentsView({
   doctors,
   defaultDoctorId,
 }: Props) {
+  const t = useTranslations("appointments");
+  const tv = useTranslations("appointments.view");
+  const tc = useTranslations("common.status");
+
+  const STATUS_LABELS: Record<AppointmentStatus, string> = {
+    BOOKED: tc("booked"),
+    COMPLETED: tc("completed"),
+    CANCELLED: tc("cancelled"),
+  };
+
+  const VIEWS: { key: View; label: string }[] = [
+    { key: "month", label: tv("month") },
+    { key: "week", label: tv("week") },
+    { key: "day", label: tv("day") },
+  ];
+
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [view, setView] = useState<View>(() =>
     typeof window !== "undefined" && window.innerWidth < 640 ? "day" : "month"
@@ -393,7 +408,7 @@ export function AppointmentsView({
             onChange={set("nutritionPlanId")}
             className="h-8 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="">All plans</option>
+            <option value="">{tv("allPlans")}</option>
             {nutritionPlans.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -409,7 +424,7 @@ export function AppointmentsView({
               type="number"
               min={0}
               max={120}
-              placeholder="Min age"
+              placeholder={tv("minAge")}
               value={filters.minAge}
               onChange={set("minAge")}
               className="h-8 w-[60px] text-sm"
@@ -419,7 +434,7 @@ export function AppointmentsView({
               type="number"
               min={0}
               max={120}
-              placeholder="Max age"
+              placeholder={tv("maxAge")}
               value={filters.maxAge}
               onChange={set("maxAge")}
               className="h-8 w-[60px] text-sm"
@@ -428,7 +443,7 @@ export function AppointmentsView({
 
           {anyFilter && (
             <Button variant="ghost" size="sm" onClick={() => setFilters(EMPTY_FILTERS)} className="h-8">
-              Clear
+              {tv("clear")}
             </Button>
           )}
           {anyFilter && (
@@ -442,7 +457,7 @@ export function AppointmentsView({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" onClick={() => navigate("prev")}>‹</Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("today")}>Today</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("today")}>{tv("today")}</Button>
             <Button variant="outline" size="sm" onClick={() => navigate("next")}>›</Button>
           </div>
 
@@ -479,10 +494,10 @@ export function AppointmentsView({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Patients</TableHead>
-              <TableHead>Doctor</TableHead>
-              <TableHead>Scheduled</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t("tableHeaders.patients")}</TableHead>
+              <TableHead>{t("tableHeaders.doctor")}</TableHead>
+              <TableHead>{t("tableHeaders.scheduled")}</TableHead>
+              <TableHead>{t("tableHeaders.status")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -497,13 +512,13 @@ export function AppointmentsView({
                     {new Date(a.scheduledAt).toLocaleString()}
                   </Link>
                 </TableCell>
-                <TableCell>{statusBadge(a.status)}</TableCell>
+                <TableCell>{statusBadge(a.status, STATUS_LABELS)}</TableCell>
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                  No appointments match the current filters.
+                  {tv("noResults")}
                 </TableCell>
               </TableRow>
             )}

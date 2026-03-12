@@ -11,6 +11,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import type { Route } from "next";
+import { useTranslations } from "next-intl";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -84,6 +85,7 @@ function Footer() {
 
 export function Sidebar({ navItems }: { navItems: NavItem[] }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("sidebar");
 
   // Close drawer on Escape
   useEffect(() => {
@@ -122,7 +124,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
           type="button"
           onClick={() => setOpen(true)}
           className="rounded-md p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          aria-label="Open menu"
+          aria-label={t("openMenu")}
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -144,7 +146,7 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
                 type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-md p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-                aria-label="Close menu"
+                aria-label={t("closeMenu")}
               >
                 <X className="h-5 w-5" />
               </button>

@@ -42,6 +42,59 @@
       "cancelled": "Cancelada"
     }
   },
+  "home": {
+    "tagline": "Sistema de registro nutricional",
+    "title": "Plataforma Jami Care",
+    "description": "Registra resultados de citas, sube planes nutricionales y sigue las tendencias de medidas de pacientes en un espacio seguro.",
+    "openDashboard": "Abrir panel",
+    "viewPortal": "Ver portal del paciente",
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "features": {
+      "clinician": {
+        "title": "Flujo clínico",
+        "description": "Captura métricas de citas, archivos de planes externos y notas clínicas."
+      },
+      "patient": {
+        "title": "Seguimiento del paciente",
+        "description": "Los pacientes autorreportan medidas y revisan tendencias de progreso."
+      },
+      "secure": {
+        "title": "Registros seguros",
+        "description": "Acceso según rol y eventos de auditoría en cada operación de escritura."
+      }
+    }
+  },
+  "sidebar": {
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
+  },
+  "chat": {
+    "newChat": "Nuevo chat",
+    "creating": "Creando…",
+    "noConversations": "Sin conversaciones todavía.",
+    "startFirst": "Inicia tu primera conversación",
+    "thinking": "Pensando…",
+    "error": "Algo salió mal. Por favor intenta de nuevo."
+  },
+  "assistant": {
+    "title": "Asistente de práctica",
+    "subtitle": "Pregunta sobre pacientes, citas y tendencias de métricas.",
+    "emptyState": "Pregúntame cualquier cosa sobre tus pacientes, citas o métricas.",
+    "placeholder": "Pregunta sobre tus pacientes, citas o métricas…",
+    "suggested": {
+      "patients": "¿Cuántos pacientes tengo asignados?",
+      "appointments": "¿Cuántas citas tengo mañana?",
+      "summary": "Dame un resumen de la última cita",
+      "weight": "Muéstrame la tendencia de peso del paciente"
+    },
+    "tools": {
+      "listMyPatients": "Listando pacientes",
+      "getMyAppointments": "Obteniendo citas",
+      "getLatestAppointmentSummary": "Obteniendo resumen de cita",
+      "getPatientMetricTrend": "Obteniendo tendencia de métrica"
+    }
+  },
   "dashboard": {
     "title": "Panel",
     "subtitle": "Resumen de la actividad de pacientes y progreso clínico.",
@@ -72,6 +125,12 @@
     "noPatients": "Sin pacientes todavía.",
     "subtitle": "{count} perfiles activos en tu espacio de trabajo.",
     "noDoctorAssigned": "Sin médico asignado",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "activate": "Activar",
+    "deactivate": "Desactivar",
     "form": {
       "title": "Nuevo paciente",
       "button": "Nuevo paciente",
@@ -120,6 +179,7 @@
         "assignedDoctor": "Médico asignado",
         "nutritionPlan": "Plan nutricional",
         "color": "Color del paciente",
+        "customColor": "Color personalizado",
         "clinicalSummary": "Resumen clínico",
         "saving": "Guardando...",
         "updateRecord": "Actualizar registro",
@@ -131,6 +191,24 @@
         "visibleToPatient": "Visible para el paciente",
         "addNote": "Agregar nota"
       }
+    },
+    "internalNoteForm": {
+      "placeholder": "Nota interna solo para médico",
+      "saving": "Guardando...",
+      "save": "Guardar nota interna"
+    },
+    "scheduleForm": {
+      "date": "Fecha de la cita",
+      "datePlaceholder": "Elige fecha de la cita",
+      "time": "Hora de la cita",
+      "scheduling": "Programando...",
+      "schedule": "Programar",
+      "scheduled": "Cita programada",
+      "failed": "No se pudo programar la cita",
+      "upcoming": "Próximas citas de este paciente",
+      "none": "Sin citas programadas todavía.",
+      "completed": "Completada",
+      "bookedStatus": "Programada"
     }
   },
   "appointments": {
@@ -152,7 +230,10 @@
       "dateAndTime": "Fecha y hora",
       "creating": "Creando...",
       "createAppointment": "Crear cita",
-      "failedCreate": "Error al crear la cita"
+      "failedCreate": "Error al crear la cita",
+      "close": "Cerrar",
+      "selected": "{count} seleccionados",
+      "scheduleHints": "Preferencias horarias del paciente"
     },
     "detail": {
       "title": "Cita",
@@ -166,7 +247,40 @@
       "public": "Pública",
       "internal": "Interna",
       "markCompleted": "Marcar como completada",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "makeInternal": "Hacer interna",
+      "makePublic": "Hacer pública"
+    },
+    "view": {
+      "allPatients": "Todos los pacientes",
+      "allPlans": "Todos los planes",
+      "allStatuses": "Todos los estados",
+      "noStatuses": "Sin estados",
+      "clear": "Limpiar",
+      "today": "Hoy",
+      "month": "Mes",
+      "week": "Semana",
+      "day": "Día",
+      "noResults": "Ninguna cita coincide con los filtros actuales.",
+      "searchPatients": "Buscar pacientes…",
+      "noPatientsFound": "No se encontraron pacientes",
+      "clearSelection": "Limpiar selección",
+      "minAge": "Edad mín.",
+      "maxAge": "Edad máx.",
+      "noPeriod": "Sin citas en este período."
+    },
+    "note": {
+      "placeholder": "Agregar nota de cita…",
+      "visibleToPatient": "Visible para el paciente",
+      "saving": "Guardando…",
+      "save": "Guardar nota"
+    },
+    "metricsForm": {
+      "value": "Valor",
+      "addRow": "+ Agregar fila",
+      "saving": "Guardando...",
+      "save": "Guardar métricas",
+      "failed": "Error al guardar las métricas"
     }
   },
   "stats": {
@@ -242,6 +356,37 @@
     "add": "Agregar",
     "noPlans": "Sin planes nutricionales todavía."
   },
+  "metrics": {
+    "radarChart": {
+      "latest": "Más reciente",
+      "notEnough": "Métricas insuficientes para esta fecha (se necesitan ≥ 3)."
+    },
+    "trendChart": {
+      "appointment": "Cita",
+      "clickToOpen": "Clic para abrir →",
+      "timeframes": {
+        "1W": "1S",
+        "1M": "1M",
+        "3M": "3M",
+        "all": "Todo"
+      }
+    }
+  },
+  "upload": {
+    "title": "Subir plan nutricional/de medición",
+    "accepted": "Tipos aceptados: PDF e imágenes. Tamaño máximo: 8MB.",
+    "permission": "Solo médicos/gestores pueden subir archivos de planes.",
+    "idle": "En espera",
+    "uploading": "Subiendo",
+    "uploaded": "Subido",
+    "error": "Error",
+    "uploadingFile": "Subiendo archivo...",
+    "success": "Archivo subido correctamente",
+    "complete": "Carga completada",
+    "notUploaded": "El archivo no se subió. Verifica el tipo, tamaño y permisos.",
+    "failed": "Error al subir. Por favor intenta de nuevo.",
+    "refresh": "Actualizar archivos"
+  },
   "patient": {
     "myProfile": "Mi perfil",
     "profile": {
@@ -262,6 +407,12 @@
       "notesFromDoctor": "Notas de tu médico",
       "viewTrends": "Ver tendencias de medidas →",
       "schedulePreference": "Preferencia horaria"
+    },
+    "chat": {
+      "title": "Mis chats",
+      "subtitle": "Pregúntale cualquier cosa a tu asistente nutricional.",
+      "emptyState": "Pregúntame cualquier cosa sobre tu plan nutricional, bienestar o próximas citas.",
+      "placeholder": "Escribe un mensaje… (Enter para enviar, Shift+Enter para nueva línea)"
     },
     "measurements": {
       "title": "Mis medidas",

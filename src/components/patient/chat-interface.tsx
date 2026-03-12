@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendHorizonal } from "lucide-react";
@@ -15,6 +16,8 @@ type Props = {
 export function ChatInterface({ conversationId, initialMessages }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
+  const t = useTranslations("patient.chat");
+  const tc = useTranslations("chat");
 
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: `/api/chat/${conversationId}` }),
@@ -52,7 +55,7 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
       <div className="flex-1 overflow-y-auto space-y-4 p-4">
         {messages.length === 0 && (
           <p className="text-center text-sm text-muted-foreground pt-8">
-            Ask me anything about your nutrition plan, wellness, or upcoming appointments.
+            {t("emptyState")}
           </p>
         )}
         {messages.map((msg) => {
@@ -91,14 +94,14 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-muted rounded-2xl px-4 py-2 text-sm text-muted-foreground animate-pulse">
-              Thinking…
+              {tc("thinking")}
             </div>
           </div>
         )}
         {error && (
           <div className="flex justify-start">
             <div className="bg-destructive/10 text-destructive rounded-2xl px-4 py-2 text-sm">
-              Something went wrong. Please try again.
+              {tc("error")}
             </div>
           </div>
         )}
@@ -111,7 +114,7 @@ export function ChatInterface({ conversationId, initialMessages }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+          placeholder={t("placeholder")}
           rows={2}
           className="resize-none flex-1"
           disabled={isLoading}

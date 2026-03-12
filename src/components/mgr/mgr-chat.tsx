@@ -7,6 +7,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isToolUIPart, getToolName, type UIMessage } from "ai";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendHorizonal, Check, Loader2 } from "lucide-react";
@@ -34,20 +35,6 @@ const MD_COMPONENTS: React.ComponentProps<typeof Markdown>["components"] = {
   td: ({ children }) => <td className="py-0.5 pr-2 border-t border-border">{children}</td>,
 };
 
-const SUGGESTED_QUESTIONS = [
-  "How many patients do I have assigned?",
-  "How many appointments do I have tomorrow?",
-  "Give me a summary of the latest appointment",
-  "Show me a weight trend for patient",
-];
-
-const TOOL_LABELS: Record<string, string> = {
-  listMyPatients: "Listing patients",
-  getMyAppointments: "Fetching appointments",
-  getLatestAppointmentSummary: "Fetching appointment summary",
-  getPatientMetricTrend: "Fetching metric trend",
-};
-
 type Props = {
   conversationId: string;
   initialMessages: UIMessage[];
@@ -56,6 +43,22 @@ type Props = {
 export function MgrChat({ conversationId, initialMessages }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
+  const t = useTranslations("assistant");
+  const tc = useTranslations("chat");
+
+  const SUGGESTED_QUESTIONS = [
+    t("suggested.patients"),
+    t("suggested.appointments"),
+    t("suggested.summary"),
+    t("suggested.weight"),
+  ];
+
+  const TOOL_LABELS: Record<string, string> = {
+    listMyPatients: t("tools.listMyPatients"),
+    getMyAppointments: t("tools.getMyAppointments"),
+    getLatestAppointmentSummary: t("tools.getLatestAppointmentSummary"),
+    getPatientMetricTrend: t("tools.getPatientMetricTrend"),
+  };
 
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: `/api/chat/mgr/${conversationId}` }),
@@ -93,7 +96,7 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
         {messages.length === 0 && (
           <div className="flex flex-col items-center gap-4 pt-8">
             <p className="text-center text-sm text-muted-foreground">
-              Ask me anything about your patients, appointments, or metrics.
+              {t("emptyState")}
             </p>
             <div className="flex flex-wrap gap-2 justify-center max-w-lg">
               {SUGGESTED_QUESTIONS.map((q) => (
@@ -178,7 +181,7 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
         {showThinking && (
           <div className="flex justify-start">
             <div className="bg-muted rounded-2xl px-4 py-2 text-sm text-muted-foreground animate-pulse">
-              Thinking…
+              {tc("thinking")}
             </div>
           </div>
         )}
@@ -186,7 +189,7 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
         {error && (
           <div className="flex justify-start">
             <div className="bg-destructive/10 text-destructive rounded-2xl px-4 py-2 text-sm">
-              Something went wrong. Please try again.
+              {tc("error")}
             </div>
           </div>
         )}
@@ -205,7 +208,7 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about your patients, appointments, or metrics…"
+          placeholder={t("placeholder")}
           rows={2}
           className="resize-none flex-1"
           disabled={isLoading}

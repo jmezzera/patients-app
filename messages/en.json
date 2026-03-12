@@ -42,6 +42,59 @@
       "cancelled": "Cancelled"
     }
   },
+  "home": {
+    "tagline": "Nutrition System of Record",
+    "title": "Jami Care Platform",
+    "description": "Record appointment outcomes, upload nutrition plans, and track patient measurement trends in one secure workspace.",
+    "openDashboard": "Open dashboard",
+    "viewPortal": "View patient portal",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "features": {
+      "clinician": {
+        "title": "Clinician workflow",
+        "description": "Capture appointment metrics, external plan files, and chart notes."
+      },
+      "patient": {
+        "title": "Patient tracking",
+        "description": "Patients self-report measurements and review progress trends."
+      },
+      "secure": {
+        "title": "Secure records",
+        "description": "Role-aware access plus audit events for every write operation."
+      }
+    }
+  },
+  "sidebar": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "chat": {
+    "newChat": "New chat",
+    "creating": "Creating…",
+    "noConversations": "No conversations yet.",
+    "startFirst": "Start your first chat",
+    "thinking": "Thinking…",
+    "error": "Something went wrong. Please try again."
+  },
+  "assistant": {
+    "title": "Practice Assistant",
+    "subtitle": "Ask about patients, appointments, and metric trends.",
+    "emptyState": "Ask me anything about your patients, appointments, or metrics.",
+    "placeholder": "Ask about your patients, appointments, or metrics…",
+    "suggested": {
+      "patients": "How many patients do I have assigned?",
+      "appointments": "How many appointments do I have tomorrow?",
+      "summary": "Give me a summary of the latest appointment",
+      "weight": "Show me a weight trend for patient"
+    },
+    "tools": {
+      "listMyPatients": "Listing patients",
+      "getMyAppointments": "Fetching appointments",
+      "getLatestAppointmentSummary": "Fetching appointment summary",
+      "getPatientMetricTrend": "Fetching metric trend"
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Snapshot of patient activity and care progress.",
@@ -72,6 +125,12 @@
     "noPatients": "No patients yet.",
     "subtitle": "{count} active profiles in your clinic workspace.",
     "noDoctorAssigned": "No doctor assigned",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "activate": "Activate",
+    "deactivate": "Deactivate",
     "form": {
       "title": "New patient",
       "button": "New patient",
@@ -120,6 +179,7 @@
         "assignedDoctor": "Assigned doctor",
         "nutritionPlan": "Nutrition plan",
         "color": "Patient colour",
+        "customColor": "Custom colour",
         "clinicalSummary": "Clinical summary",
         "saving": "Saving...",
         "updateRecord": "Update record",
@@ -131,6 +191,24 @@
         "visibleToPatient": "Visible to patient",
         "addNote": "Add note"
       }
+    },
+    "internalNoteForm": {
+      "placeholder": "Doctor-only internal note",
+      "saving": "Saving...",
+      "save": "Save internal note"
+    },
+    "scheduleForm": {
+      "date": "Appointment date",
+      "datePlaceholder": "Pick appointment date",
+      "time": "Appointment time",
+      "scheduling": "Scheduling...",
+      "schedule": "Schedule",
+      "scheduled": "Appointment scheduled",
+      "failed": "Could not schedule appointment",
+      "upcoming": "Upcoming for this patient",
+      "none": "No appointments scheduled yet.",
+      "completed": "Completed",
+      "bookedStatus": "Scheduled"
     }
   },
   "appointments": {
@@ -152,7 +230,10 @@
       "dateAndTime": "Date and time",
       "creating": "Creating...",
       "createAppointment": "Create appointment",
-      "failedCreate": "Failed to create appointment"
+      "failedCreate": "Failed to create appointment",
+      "close": "Close",
+      "selected": "{count} selected",
+      "scheduleHints": "Patient schedule preferences"
     },
     "detail": {
       "title": "Appointment",
@@ -166,7 +247,40 @@
       "public": "Public",
       "internal": "Internal",
       "markCompleted": "Mark completed",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "makeInternal": "Make internal",
+      "makePublic": "Make public"
+    },
+    "view": {
+      "allPatients": "All patients",
+      "allPlans": "All plans",
+      "allStatuses": "All statuses",
+      "noStatuses": "No statuses",
+      "clear": "Clear",
+      "today": "Today",
+      "month": "Month",
+      "week": "Week",
+      "day": "Day",
+      "noResults": "No appointments match the current filters.",
+      "searchPatients": "Search patients…",
+      "noPatientsFound": "No patients found",
+      "clearSelection": "Clear selection",
+      "minAge": "Min age",
+      "maxAge": "Max age",
+      "noPeriod": "No appointments this period."
+    },
+    "note": {
+      "placeholder": "Add appointment note…",
+      "visibleToPatient": "Visible to patient",
+      "saving": "Saving…",
+      "save": "Save note"
+    },
+    "metricsForm": {
+      "value": "Value",
+      "addRow": "+ Add row",
+      "saving": "Saving...",
+      "save": "Save metrics",
+      "failed": "Failed to save metrics"
     }
   },
   "stats": {
@@ -242,6 +356,37 @@
     "add": "Add",
     "noPlans": "No nutrition plans yet."
   },
+  "metrics": {
+    "radarChart": {
+      "latest": "Latest",
+      "notEnough": "Not enough metrics for this date (need ≥ 3)."
+    },
+    "trendChart": {
+      "appointment": "Appointment",
+      "clickToOpen": "Click to open →",
+      "timeframes": {
+        "1W": "1W",
+        "1M": "1M",
+        "3M": "3M",
+        "all": "All"
+      }
+    }
+  },
+  "upload": {
+    "title": "Upload nutrition/measurement plan",
+    "accepted": "Accepted types: PDF and images. Max size: 8MB.",
+    "permission": "Only doctors/managers can upload plan files.",
+    "idle": "Idle",
+    "uploading": "Uploading",
+    "uploaded": "Uploaded",
+    "error": "Error",
+    "uploadingFile": "Uploading file...",
+    "success": "File uploaded successfully",
+    "complete": "Upload completed",
+    "notUploaded": "File was not uploaded. Check file type/size and permissions.",
+    "failed": "Upload failed. Please try again.",
+    "refresh": "Refresh files"
+  },
   "patient": {
     "myProfile": "My profile",
     "profile": {
@@ -262,6 +407,12 @@
       "schedulePreference": "Schedule preference",
       "notesFromDoctor": "Notes from your doctor",
       "viewTrends": "View measurement trends →"
+    },
+    "chat": {
+      "title": "My Chats",
+      "subtitle": "Ask your nutrition assistant anything.",
+      "emptyState": "Ask me anything about your nutrition plan, wellness, or upcoming appointments.",
+      "placeholder": "Type a message… (Enter to send, Shift+Enter for newline)"
     },
     "measurements": {
       "title": "My measurements",
