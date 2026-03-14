@@ -57,21 +57,27 @@ async function ensureLocalUser(clerkId: string) {
   const lastName = clerkUser.lastName ?? "";
   const displayName = `${firstName} ${lastName}`.trim();
 
-  const localUser = await db.user.upsert({
-    where: { clerkId },
-    update: {
-      email: primaryEmail,
-      displayName,
-      role,
-    },
-    create: {
-      clerkId,
-      orgId: DEFAULT_ORG_ID,
-      role,
-      email: primaryEmail,
-      displayName,
-    },
-  });
+  // Try to upsert by clerkId first. If the email already exists (e.g. seeded
+  // users), claim that record by updating its clerkId instead.
+  let localUser = await db.user.findUnique({ where: { clerkId } });
+  if (localUser) {
+    localUser = await db.user.update({
+      where: { clerkId },
+      data: { email: primaryEmail, displayName, role },
+    });
+  } else {
+    const existing = await db.user.findUnique({ where: { email: primaryEmail } });
+    if (existing) {
+      localUser = await db.user.update({
+        where: { email: primaryEmail },
+        data: { clerkId, displayName, role },
+      });
+    } else {
+      localUser = await db.user.create({
+        data: { clerkId, orgId: DEFAULT_ORG_ID, role, email: primaryEmail, displayName },
+      });
+    }
+  }
 
   if (role === Role.PATIENT) {
     await db.patient.upsert({
