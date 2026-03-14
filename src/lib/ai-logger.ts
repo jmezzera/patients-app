@@ -40,6 +40,8 @@ class AiLoggerIntegration implements TelemetryIntegration {
         tool: event.toolCall.toolName,
         id: event.toolCall.toolCallId,
         durationMs: event.durationMs,
+        // output logged at debug — may contain patient data
+        output: (event as unknown as { output?: unknown }).output,
       });
     } else {
       log.error("tool call failed", {

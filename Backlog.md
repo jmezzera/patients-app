@@ -23,6 +23,11 @@ Dependencies appear up to date, but no automated vulnerability scanning step is 
 
 ### Neon Prod
 
+### Neon local dev branch isolation
+Currently the Vercel-Managed Neon integration sets `DATABASE_URL` for all environments (including Development) to the `main` branch. `vercel env pull` therefore gives developers a connection string pointing to the production database.
+
+**Recommendation:** Either (a) switch to the Neon-Managed integration which has an opt-in `vercel-dev` persistent branch for local dev, or (b) document that each developer must create their own Neon branch (`dev/<name>`) and set `DATABASE_URL` manually in `.env.local`. Until resolved, local mutations risk hitting production data.
+
 ### Feature flagging (vercel?)
 
 ## AI

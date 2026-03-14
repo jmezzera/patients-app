@@ -10,7 +10,7 @@ import remarkGfm from "remark-gfm";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SendHorizonal, Check, Loader2 } from "lucide-react";
+import { SendHorizonal, Check, Loader2, ChevronDown } from "lucide-react";
 
 const MD_COMPONENTS: React.ComponentProps<typeof Markdown>["components"] = {
   p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
@@ -35,6 +35,95 @@ const MD_COMPONENTS: React.ComponentProps<typeof Markdown>["components"] = {
   td: ({ children }) => <td className="py-0.5 pr-2 border-t border-border">{children}</td>,
 };
 
+// ── Tool call display ────────────────────────────────────────────────────────
+
+type ToolPart = Parameters<typeof getToolName>[0];
+
+function ToolGroup({ parts, labels }: { parts: ToolPart[]; labels: Record<string, string> }) {
+  const allDone = parts.every((p) => p.state === "output-available");
+  const [expanded, setExpanded] = useState(!allDone);
+
+  // Auto-expand while any tool is still running
+  useEffect(() => {
+    if (!allDone) setExpanded(true);
+  }, [allDone]);
+
+  // Single tool — simple inline row, no collapse chrome
+  if (parts.length === 1) {
+    const name = getToolName(parts[0]);
+    const label = labels[name] ?? name;
+    const done = parts[0].state === "output-available";
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {done ? (
+          <Check className="h-3 w-3 text-green-500 shrink-0" />
+        ) : (
+          <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+        )}
+        <span className={done ? "opacity-60" : ""}>{label}</span>
+      </div>
+    );
+  }
+
+  // Multiple tools — group by tool name and show collapsible summary
+  const groups = parts.reduce<Record<string, ToolPart[]>>((acc, part) => {
+    const name = getToolName(part);
+    (acc[name] ??= []).push(part);
+    return acc;
+  }, {});
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {/* Summary header — always visible */}
+      <button
+        onClick={() => setExpanded((e) => !e)}
+        disabled={!allDone}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:pointer-events-none"
+      >
+        {allDone ? (
+          <Check className="h-3 w-3 text-green-500 shrink-0" />
+        ) : (
+          <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+        )}
+        <span className={allDone ? "opacity-60" : ""}>
+          {allDone ? `${parts.length} queries complete` : "Querying data\u2026"}
+        </span>
+        {allDone && (
+          <ChevronDown
+            className={`h-3 w-3 opacity-40 transition-transform duration-150 ${expanded ? "rotate-180" : ""}`}
+          />
+        )}
+      </button>
+
+      {/* Expandable breakdown by tool name */}
+      {expanded && (
+        <div className="pl-4 border-l border-border/40 flex flex-col gap-0.5 mt-0.5">
+          {Object.entries(groups).map(([name, groupParts]) => {
+            const label = labels[name] ?? name;
+            const groupDone = groupParts.every((p) => p.state === "output-available");
+            const count = groupParts.length;
+            return (
+              <div key={name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {groupDone ? (
+                  <Check className="h-2.5 w-2.5 text-green-500 shrink-0" />
+                ) : (
+                  <Loader2 className="h-2.5 w-2.5 animate-spin shrink-0" />
+                )}
+                <span className={groupDone ? "opacity-50" : ""}>{label}</span>
+                {count > 1 && (
+                  <span className="opacity-30 tabular-nums">×{count}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
+
 type Props = {
   conversationId: string;
   initialMessages: UIMessage[];
@@ -56,6 +145,7 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
   const TOOL_LABELS: Record<string, string> = {
     listMyPatients: t("tools.listMyPatients"),
     getMyAppointments: t("tools.getMyAppointments"),
+    getAppointmentSummaries: t("tools.getAppointmentSummaries"),
     getLatestAppointmentSummary: t("tools.getLatestAppointmentSummary"),
     getPatientMetricTrend: t("tools.getPatientMetricTrend"),
   };
@@ -142,28 +232,9 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
 
           return (
             <div key={msg.id} className="flex flex-col gap-1.5 items-start">
-              {/* Tool call indicators */}
+              {/* Tool call group */}
               {toolParts.length > 0 && (
-                <div className="flex flex-col gap-1">
-                  {toolParts.map((part, i) => {
-                    const name = getToolName(part);
-                    const label = TOOL_LABELS[name] ?? name;
-                    const done = part.state === "output-available";
-                    return (
-                      <div
-                        key={i}
-                        className="flex items-center gap-1.5 text-xs text-muted-foreground"
-                      >
-                        {done ? (
-                          <Check className="h-3 w-3 text-green-500 shrink-0" />
-                        ) : (
-                          <Loader2 className="h-3 w-3 animate-spin shrink-0" />
-                        )}
-                        <span className={done ? "opacity-60" : ""}>{label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ToolGroup parts={toolParts as ToolPart[]} labels={TOOL_LABELS} />
               )}
 
               {/* Response text */}

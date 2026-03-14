@@ -6,10 +6,7 @@ import { recordAuditEvent } from "@/lib/audit";
 export async function listPatients(actor: SessionActor, doctorId?: string) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
-  const where =
-    actor.role === Role.DOCTOR
-      ? { orgId: actor.orgId, assignedDoctorId: actor.id }
-      : { orgId: actor.orgId, ...(doctorId ? { assignedDoctorId: doctorId } : {}) };
+  const where = { orgId: actor.orgId, ...(doctorId ? { assignedDoctorId: doctorId } : {}) };
 
   return db.patient.findMany({
     where,
@@ -154,8 +151,7 @@ export async function createPatient(
       dob: payload.dob,
       phone: payload.phone,
       clinicalSummary: payload.clinicalSummary,
-      assignedDoctorId:
-        payload.assignedDoctorId ?? (actor.role === Role.DOCTOR ? actor.id : undefined),
+      assignedDoctorId: payload.assignedDoctorId,
       nutritionPlanId: payload.nutritionPlanId,
     },
   });
@@ -180,7 +176,6 @@ export async function addPatientNote(
 
   const patient = await db.patient.findFirst({ where: { id: input.patientId, orgId: actor.orgId } });
   if (!patient) throw new Error("Patient not found");
-  if (actor.role === Role.DOCTOR && patient.assignedDoctorId !== actor.id) throw new Error("Forbidden");
 
   const note = await db.note.create({
     data: {

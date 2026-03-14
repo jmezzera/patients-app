@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "agent:test": "tsx scripts/test-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^3.0.72",

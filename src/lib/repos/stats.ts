@@ -8,13 +8,10 @@ export async function getAppointmentStats(
 ) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
-  const doctorFilter =
-    actor.role === Role.DOCTOR ? actor.id : (params.doctorId ?? undefined);
-
   const where = {
     orgId: actor.orgId,
     scheduledAt: { gte: params.from, lte: params.to },
-    ...(doctorFilter ? { doctorId: doctorFilter } : {}),
+    ...(params.doctorId ? { doctorId: params.doctorId } : {}),
   };
 
   const [total, completed, cancelled, booked] = await Promise.all([
@@ -33,12 +30,9 @@ export async function getPatientStats(
 ) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
-  const doctorFilter =
-    actor.role === Role.DOCTOR ? actor.id : (params.doctorId ?? undefined);
-
   const where = {
     orgId: actor.orgId,
-    ...(doctorFilter ? { assignedDoctorId: doctorFilter } : {}),
+    ...(params.doctorId ? { assignedDoctorId: params.doctorId } : {}),
   };
 
   const total = await db.patient.count({ where });
@@ -51,14 +45,11 @@ export async function getAppointmentTimeSeries(
 ) {
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
-  const doctorFilter =
-    actor.role === Role.DOCTOR ? actor.id : (params.doctorId ?? undefined);
-
   const appointments = await db.appointment.findMany({
     where: {
       orgId: actor.orgId,
       scheduledAt: { gte: params.from, lte: params.to },
-      ...(doctorFilter ? { doctorId: doctorFilter } : {}),
+      ...(params.doctorId ? { doctorId: params.doctorId } : {}),
     },
     select: { scheduledAt: true, status: true },
     orderBy: { scheduledAt: "asc" },
@@ -81,7 +72,7 @@ export async function getAppointmentTimeSeries(
 }
 
 export async function listDoctors(actor: SessionActor) {
-  assertRole(actor, [Role.MANAGER]);
+  assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
   return db.user.findMany({
     where: { orgId: actor.orgId, role: Role.DOCTOR },

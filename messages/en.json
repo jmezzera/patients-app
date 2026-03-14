@@ -91,6 +91,7 @@
     "tools": {
       "listMyPatients": "Listing patients",
       "getMyAppointments": "Fetching appointments",
+      "getAppointmentSummaries": "Fetching appointment details",
       "getLatestAppointmentSummary": "Fetching appointment summary",
       "getPatientMetricTrend": "Fetching metric trend"
     }

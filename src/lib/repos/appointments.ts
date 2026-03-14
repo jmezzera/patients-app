@@ -66,10 +66,7 @@ export async function listAppointments(actor: SessionActor, doctorId?: string) {
 
   assertRole(actor, [Role.MANAGER, Role.DOCTOR]);
 
-  const where =
-    actor.role === Role.DOCTOR
-      ? { orgId: actor.orgId, doctorId: actor.id }
-      : { orgId: actor.orgId, ...(doctorId ? { doctorId } : {}) };
+  const where = { orgId: actor.orgId, ...(doctorId ? { doctorId } : {}) };
 
   return db.appointment.findMany({
     where,
@@ -164,7 +161,7 @@ export async function addAppointmentNote(
   actor: SessionActor,
   input: { patientId: string; appointmentId: string; content: string; isPublic: boolean },
 ) {
-  assertRole(actor, [Role.DOCTOR]);
+  assertRole(actor, [Role.DOCTOR, Role.MANAGER]);
 
   const appointment = await db.appointment.findFirst({
     where: {
@@ -204,7 +201,7 @@ export async function updateNoteVisibility(
   noteId: string,
   isPublic: boolean,
 ) {
-  assertRole(actor, [Role.DOCTOR]);
+  assertRole(actor, [Role.DOCTOR, Role.MANAGER]);
 
   const note = await db.note.findFirst({
     where: { id: noteId, orgId: actor.orgId, authorId: actor.id },
@@ -236,7 +233,7 @@ export async function addAppointmentMetrics(
     metrics: Array<{ patientId: string; metricTypeId: string; value: string }>;
   },
 ) {
-  assertRole(actor, [Role.DOCTOR]);
+  assertRole(actor, [Role.DOCTOR, Role.MANAGER]);
 
   const appointment = await db.appointment.findFirst({
     where: { id: input.appointmentId, orgId: actor.orgId },

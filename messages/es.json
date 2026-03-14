@@ -91,6 +91,7 @@
     "tools": {
       "listMyPatients": "Listando pacientes",
       "getMyAppointments": "Obteniendo citas",
+      "getAppointmentSummaries": "Obteniendo detalle de citas",
       "getLatestAppointmentSummary": "Obteniendo resumen de cita",
       "getPatientMetricTrend": "Obteniendo tendencia de métrica"
     }
