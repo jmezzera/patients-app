@@ -40,16 +40,48 @@ export async function POST(request: Request, { params }: Props) {
 
     await appendMessage(conversationId, "user", userText);
 
-    // Load full history from DB
+    // Load full history from DB.
+    // For assistant messages, extract only the text from __parts — the LLM does not
+    // need to see persisted tool outputs from prior turns, and passing the raw JSON
+    // causes the model to echo or hallucinate against it.
     const updated = await getStaffConversation(actor, conversationId);
-    const modelMessages = (updated?.messages ?? []).map((m) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    }));
+    const modelMessages = (updated?.messages ?? []).map((m) => {
+      if (m.role === "assistant") {
+        try {
+          const parsed = JSON.parse(m.content) as {
+            __parts?: Array<{ type: string; text?: string }>;
+          };
+          if (Array.isArray(parsed.__parts)) {
+            const text = parsed.__parts
+              .filter((p): p is { type: "text"; text: string } =>
+                p.type === "text" && typeof p.text === "string",
+              )
+              .map((p) => p.text)
+              .join("");
+            return { role: "assistant" as const, content: text };
+          }
+        } catch {
+          // fall through to raw content
+        }
+      }
+      return { role: m.role as "user" | "assistant", content: m.content };
+    });
 
     const { stream } = createMgrOrchestrator(actor);
-    const result = stream(modelMessages, async ({ text }) => {
-      if (text) await appendMessage(conversationId, "assistant", text);
+    const result = stream(modelMessages, async ({ text, toolParts }) => {
+      if (!text && toolParts.length === 0) return;
+      // Persist full parts so tool cards can be re-rendered on reload
+      const parts = [
+        ...toolParts.map((t) => ({
+          type: `tool-${t.toolName}`,
+          toolCallId: t.toolCallId,
+          state: "output-available",
+          input: t.input,
+          output: t.output,
+        })),
+        ...(text ? [{ type: "text", text }] : []),
+      ];
+      await appendMessage(conversationId, "assistant", JSON.stringify({ __parts: parts }));
     });
 
     return result.toUIMessageStreamResponse({

@@ -19,7 +19,7 @@ function patientNameWhere(name: string) {
   return clauses.length === 1 ? clauses[0] : { AND: clauses };
 }
 
-export function createMgrTools(actor: SessionActor) {
+export function createMgrDataTools(actor: SessionActor) {
   const { orgId } = actor;
 
   return {
@@ -51,7 +51,6 @@ export function createMgrTools(actor: SessionActor) {
           patients: patients.map((p) => ({
             id: p.id,
             name: `${p.firstName} ${p.lastName}`,
-            isActive: p.isActive,
             nutritionPlan: p.nutritionPlan?.name ?? null,
             assignedDoctor: p.assignedDoctor?.displayName ?? null,
             links: { detail: `/patients/${p.id}` },
@@ -69,23 +68,23 @@ export function createMgrTools(actor: SessionActor) {
         from: z
           .string()
           .optional()
-          .describe("Start of date range, ISO date string (e.g. '2025-03-12T00:00:00Z')"),
+          .describe("Start of date range ISO string. OMIT unless the user explicitly mentions a time period."),
         to: z
           .string()
           .optional()
-          .describe("End of date range, ISO date string (e.g. '2025-03-12T23:59:59Z')"),
+          .describe("End of date range ISO string. OMIT unless the user explicitly mentions a time period."),
         status: z
           .enum(["BOOKED", "COMPLETED", "CANCELLED"])
           .optional()
-          .describe("Filter by appointment status"),
+          .describe("OMIT unless the user explicitly asks for a specific status. Omitting returns all statuses."),
         patientId: z
           .string()
           .optional()
-          .describe("Filter by exact patient ID — use this when you already know the ID"),
+          .describe("Exact patient ID from a prior tool result. NEVER guess or invent this value."),
         patientName: z
           .string()
           .optional()
-          .describe("Filter by patient name (partial, case-insensitive) — only use when patientId is unknown"),
+          .describe("Patient name (partial, case-insensitive). Use when patientId is unknown."),
         limit: z.number().int().min(1).max(50).optional().describe("Max records (default 20)"),
       }),
       execute: async ({ from, to, status, patientId, patientName, limit = 20 }) => {

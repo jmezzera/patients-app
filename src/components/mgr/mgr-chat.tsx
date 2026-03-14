@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendHorizonal, Check, Loader2, ChevronDown } from "lucide-react";
+import { DISPLAY_TOOL_NAMES, renderDisplayTool } from "@/components/chat/ui-registry";
 
 const MD_COMPONENTS: React.ComponentProps<typeof Markdown>["components"] = {
   p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
@@ -148,7 +149,11 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
     getAppointmentSummaries: t("tools.getAppointmentSummaries"),
     getLatestAppointmentSummary: t("tools.getLatestAppointmentSummary"),
     getPatientMetricTrend: t("tools.getPatientMetricTrend"),
+    renderPatientList: t("tools.listMyPatients"),
+    renderAppointmentList: t("tools.getMyAppointments"),
   };
+
+  const DISPLAY_TOOLS = DISPLAY_TOOL_NAMES;
 
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: `/api/chat/mgr/${conversationId}` }),
@@ -207,7 +212,9 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
           const textParts = msg.parts.filter(
             (p): p is { type: "text"; text: string } => p.type === "text",
           );
-          const toolParts = msg.parts.filter(isToolUIPart);
+          const allToolParts = msg.parts.filter(isToolUIPart);
+          const displayToolParts = allToolParts.filter((p) => DISPLAY_TOOLS.has(getToolName(p)));
+          const utilityToolParts = allToolParts.filter((p) => !DISPLAY_TOOLS.has(getToolName(p)));
           const text = textParts.map((p) => p.text).join("");
 
           const rawTime = (msg.metadata as { createdAt?: string } | undefined)?.createdAt;
@@ -228,14 +235,25 @@ export function MgrChat({ conversationId, initialMessages }: Props) {
           }
 
           // Assistant message
-          if (!text && toolParts.length === 0) return null;
+          if (!text && allToolParts.length === 0) return null;
 
           return (
             <div key={msg.id} className="flex flex-col gap-1.5 items-start">
-              {/* Tool call group */}
-              {toolParts.length > 0 && (
-                <ToolGroup parts={toolParts as ToolPart[]} labels={TOOL_LABELS} />
+              {/* Utility tool call group (spinner/checkmark) */}
+              {utilityToolParts.length > 0 && (
+                <ToolGroup parts={utilityToolParts as ToolPart[]} labels={TOOL_LABELS} />
               )}
+
+              {/* Display tool cards */}
+              {displayToolParts.map((part, i) => {
+                const name = getToolName(part);
+                if (part.state !== "output-available") {
+                  return (
+                    <div key={i} className="w-full max-w-2xl rounded-xl border bg-card h-24 animate-pulse" />
+                  );
+                }
+                return <React.Fragment key={i}>{renderDisplayTool(name, part.output)}</React.Fragment>;
+              })}
 
               {/* Response text */}
               {text && (

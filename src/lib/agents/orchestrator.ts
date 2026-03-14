@@ -3,6 +3,7 @@ import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
 import { createNutritionistTools } from "./tools/nutritionist-tools";
 import { createScheduleTools } from "./tools/schedule-tools";
+import { globalBaseline, callerContext } from "./prompts/layers";
 import type { SessionActor } from "@/lib/authz";
 import { aiLogger } from "@/lib/ai-logger";
 
@@ -12,14 +13,6 @@ const gateway = createGateway({ apiKey: process.env.VERCEL_AI_TEST_KEY });
 export const CHAT_MODEL = gateway("openai/gpt-4o-mini");
 
 // ─── Worker system prompts ────────────────────────────────────────────────────
-// Static: agents fetch patient-specific context via their own tools.
-
-const TODAY = new Date().toLocaleDateString("en-US", {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
 
 const NUTRITIONIST_SYSTEM = `\
 You are a clinical data retrieval agent for a nutrition practice.
@@ -28,7 +21,7 @@ Use your tools to fetch the data you need (profile, measurements, notes, appoint
 You have access to full appointment history including past and completed appointments — use getAppointments to retrieve them.
 Do not guess or invent clinical details — only report what the tools return.
 Return a concise plain-text summary suitable for the orchestrator to include in a patient-facing response.
-Today is ${TODAY}.`;
+${globalBaseline()}`;
 
 const SCHEDULE_SYSTEM = `\
 You are a scheduling assistant for a nutrition practice.
@@ -37,11 +30,12 @@ Use your tools to check upcoming appointments, the patient's weekly preferences,
 When reasoning about scheduling windows, account for the doctor's working hours minus any calendar blocks.
 Return a concise plain-text summary with specific dates and times where possible.
 If no upcoming appointments exist, clearly state that and suggest the patient contact the practice.
-Today is ${TODAY}.`;
+${globalBaseline()}`;
 
 // ─── Orchestrator system prompt ───────────────────────────────────────────────
 
-const ORCHESTRATOR_SYSTEM = `\
+function buildOrchestratorSystem(actor: SessionActor): string {
+  return `\
 You are Jami, a helpful wellness assistant for patients of a nutrition practice.
 You have two specialist agents you can delegate to:
 
@@ -63,7 +57,9 @@ Formatting guidelines:
 - Be warm, concise, and encouraging.
 - Never diagnose conditions or prescribe treatments.
 - For urgent health concerns, direct the patient to contact their nutritionist directly.
-Today is ${TODAY}.`;
+${globalBaseline()}
+${callerContext(actor)}`;
+}
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
@@ -123,5 +119,5 @@ export function createOrchestrator(actor: SessionActor, patientId: string) {
     }),
   };
 
-  return { system: ORCHESTRATOR_SYSTEM, tools };
+  return { system: buildOrchestratorSystem(actor), tools };
 }
