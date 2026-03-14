@@ -107,13 +107,12 @@ async function runTurn(
         console.log(THIN);
         break;
 
-      case "step-finish":
+      case "finish-step":
         stepNum++;
         console.log(
           `[STEP ${stepNum}] finish=${chunk.finishReason}  ` +
-            `prompt=${chunk.usage.promptTokens}  ` +
-            `completion=${chunk.usage.completionTokens}  ` +
-            `total=${chunk.usage.totalTokens}`,
+            `prompt=${chunk.usage.inputTokens}  ` +
+            `completion=${chunk.usage.outputTokens}  `,
         );
         break;
 
