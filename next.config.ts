@@ -15,6 +15,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ["react-markdown", "remark-gfm"],
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.ufs.sh" },
+      { protocol: "https", hostname: "*.uploadthing.com" },
+    ],
+  },
   experimental: {
     typedRoutes: true,
   },

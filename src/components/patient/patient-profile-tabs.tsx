@@ -6,13 +6,15 @@ type Props = {
   profileTab: React.ReactNode;
   appointmentsTab: React.ReactNode;
   metricsTab: React.ReactNode;
-  labels: { profile: string; appointments: string; metrics: string };
+  foodDiaryTab?: React.ReactNode;
+  labels: { profile: string; appointments: string; metrics: string; foodDiary?: string };
 };
 
 export function PatientProfileTabs({
   profileTab,
   appointmentsTab,
   metricsTab,
+  foodDiaryTab,
   labels,
 }: Props) {
   return (
@@ -27,6 +29,11 @@ export function PatientProfileTabs({
         <TabsTrigger value="metrics" className="flex-1 rounded-lg text-sm font-medium">
           {labels.metrics}
         </TabsTrigger>
+        {foodDiaryTab && (
+          <TabsTrigger value="food" className="flex-1 rounded-lg text-sm font-medium">
+            {labels.foodDiary}
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="profile" className="mt-4 space-y-4">
@@ -40,6 +47,12 @@ export function PatientProfileTabs({
       <TabsContent value="metrics" className="mt-4 space-y-4">
         {metricsTab}
       </TabsContent>
+
+      {foodDiaryTab && (
+        <TabsContent value="food" className="mt-4 space-y-4">
+          {foodDiaryTab}
+        </TabsContent>
+      )}
     </Tabs>
   );
 }
