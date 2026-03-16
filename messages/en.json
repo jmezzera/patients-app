@@ -373,6 +373,19 @@
       }
     }
   },
+  "food": {
+    "title": "Food diary",
+    "noImages": "No food images yet.",
+    "upload": {
+      "dropOrBrowse": "Drop a food photo here or browse",
+      "hint": "Images only, max 8MB",
+      "uploading": "Uploading...",
+      "success": "Photo uploaded successfully",
+      "failed": "Upload failed. Please try again.",
+      "notUploaded": "Photo was not uploaded. Check file type/size.",
+      "clear": "Clear"
+    }
+  },
   "upload": {
     "title": "Upload nutrition/measurement plan",
     "accepted": "Accepted types: PDF and images. Max size: 8MB.",
@@ -407,6 +420,7 @@
       "noAppointments": "No appointments.",
       "schedulePreference": "Schedule preference",
       "notesFromDoctor": "Notes from your doctor",
+      "foodDiary": "Food diary",
       "viewTrends": "View measurement trends →"
     },
     "chat": {
