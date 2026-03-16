@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { X, Plus, Loader2, CalendarPlus } from "lucide-react";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
@@ -24,8 +25,8 @@ function ScheduleHints({ patients, selectedIds }: { patients: Patient[]; selecte
   if (selected.length === 0) return null;
 
   return (
-    <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs space-y-1.5">
-      <p className="font-medium text-muted-foreground">Patient schedule preferences</p>
+    <div className="rounded-lg border bg-muted/40 px-3 py-2.5 text-xs space-y-1.5 animate-slide-down">
+      <p className="font-semibold text-muted-foreground">Patient schedule preferences</p>
       {selected.map((p) => (
         <div key={p.id}>
           <span className="font-medium">{p.firstName} {p.lastName}:</span>{" "}
@@ -44,6 +45,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
   const tc = useTranslations("common");
 
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(defaultPatientIds ?? []);
@@ -54,18 +56,22 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") handleClose();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  function close() {
-    setOpen(false);
-    setError(null);
-    setSelectedPatientIds(defaultPatientIds ?? []);
-    setScheduledAt("");
-    setDoctorId(defaultDoctorId ?? doctors[0]?.id ?? "");
+  function handleClose() {
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+      setError(null);
+      setSelectedPatientIds(defaultPatientIds ?? []);
+      setScheduledAt("");
+      setDoctorId(defaultDoctorId ?? doctors[0]?.id ?? "");
+    }, 150);
   }
 
   function togglePatient(id: string) {
@@ -93,7 +99,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
       return;
     }
 
-    close();
+    handleClose();
     router.refresh();
   }
 
@@ -101,17 +107,29 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
 
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)}>
-        {t("button")}
+      <Button size="sm" onClick={() => setOpen(true)} className="gap-1.5">
+        <CalendarPlus className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">{t("button")}</span>
+        <span className="sm:hidden"><Plus className="h-3.5 w-3.5" /></span>
       </Button>
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) close(); }}
+          className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 ${
+            closing ? "opacity-0" : "animate-fade-backdrop"
+          }`}
+          style={{ transition: "opacity 0.15s ease" }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+
+          {/* Dialog */}
           <div
-            className="w-full max-w-md rounded-xl border bg-background shadow-xl"
+            className={`relative w-full sm:max-w-md rounded-t-2xl sm:rounded-xl border bg-background shadow-xl ${
+              closing ? "opacity-0 translate-y-2" : "animate-scale-in"
+            }`}
+            style={{ transition: "opacity 0.15s ease, transform 0.15s ease" }}
             role="dialog"
             aria-modal="true"
           >
@@ -119,16 +137,16 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
             <div className="flex items-center justify-between border-b px-5 py-4">
               <h2 className="text-base font-semibold">{t("title")}</h2>
               <button
-                onClick={close}
-                className="rounded-sm text-muted-foreground hover:text-foreground"
+                onClick={handleClose}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 aria-label="Close"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="space-y-4 px-5 py-4">
+            <div className="space-y-4 px-5 py-4 max-h-[70vh] overflow-y-auto">
               {/* Doctor */}
               {doctors.length > 1 && (
                 <div className="grid gap-1.5">
@@ -136,7 +154,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
                   <select
                     value={doctorId}
                     onChange={(e) => setDoctorId(e.target.value)}
-                    className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="flex h-10 w-full rounded-lg border bg-background px-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     {doctors.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -157,13 +175,13 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
                     </span>
                   )}
                 </label>
-                <div className="max-h-48 overflow-y-auto rounded-md border divide-y">
+                <div className="max-h-48 overflow-y-auto rounded-lg border divide-y">
                   {patients.map((p) => {
                     const checked = selectedPatientIds.includes(p.id);
                     return (
                       <label
                         key={p.id}
-                        className={`flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-muted/50 ${
+                        className={`flex cursor-pointer items-center gap-2.5 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 ${
                           checked ? "bg-muted/30" : ""
                         }`}
                       >
@@ -184,7 +202,7 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
                 </div>
               </div>
 
-              {/* Schedule hints — shown when patients with preferences are selected */}
+              {/* Schedule hints */}
               <ScheduleHints patients={patients} selectedIds={selectedPatientIds} />
 
               {/* Date & time */}
@@ -194,18 +212,22 @@ export function CreateAppointmentForm({ patients, doctors, defaultDoctorId, defa
                   type="datetime-local"
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
+                  className="rounded-lg"
                 />
               </div>
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 animate-slide-down">{error}</p>
+              )}
             </div>
 
             {/* Footer */}
             <div className="flex justify-end gap-2 border-t px-5 py-3">
-              <Button variant="outline" onClick={close}>
+              <Button variant="outline" onClick={handleClose}>
                 {tc("cancel")}
               </Button>
-              <Button onClick={submit} disabled={saving || !canSubmit}>
+              <Button onClick={submit} disabled={saving || !canSubmit} className="gap-1.5">
+                {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {saving ? t("creating") : t("createAppointment")}
               </Button>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -35,16 +35,16 @@ function SidebarLink({
   onClick,
 }: NavItem & { active: boolean; onClick?: () => void }) {
   const Icon = ICONS[icon] ?? LayoutDashboard;
-  const cls = `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+  const cls = `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-150 ${
     active
-      ? "bg-white/15 text-white font-medium"
+      ? "bg-white/15 text-white font-semibold shadow-sm shadow-black/10"
       : "text-white/70 hover:bg-white/10 hover:text-white"
   }`;
 
   if (isExternal) {
     return (
       <a href={href} className={cls} onClick={onClick}>
-        <Icon className="h-4 w-4 flex-shrink-0" />
+        <Icon className="h-[18px] w-[18px] flex-shrink-0" />
         {label}
       </a>
     );
@@ -52,7 +52,7 @@ function SidebarLink({
 
   return (
     <Link href={href as Route} className={cls} onClick={onClick}>
-      <Icon className="h-4 w-4 flex-shrink-0" />
+      <Icon className="h-[18px] w-[18px] flex-shrink-0" />
       {label}
     </Link>
   );
@@ -85,16 +85,25 @@ function Footer() {
 
 export function Sidebar({ navItems }: { navItems: NavItem[] }) {
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const t = useTranslations("sidebar");
+
+  const close = useCallback(() => {
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 200);
+  }, []);
 
   // Close drawer on Escape
   useEffect(() => {
     function handler(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close();
     }
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, []);
+  }, [close]);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -104,10 +113,13 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
 
   return (
     <>
-      {/* Desktop sidebar — hidden on mobile */}
+      {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 flex-shrink-0 flex-col bg-primary">
         <div className="flex h-16 items-center border-b border-white/10 px-5">
-          <Link href="/dashboard" className="text-base font-bold tracking-tight text-white">
+          <Link href="/dashboard" className="flex items-center gap-2 text-base font-bold tracking-tight text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 text-xs font-bold">
+              🥑
+            </span>
             Jami
           </Link>
         </div>
@@ -115,43 +127,58 @@ export function Sidebar({ navItems }: { navItems: NavItem[] }) {
         <Footer />
       </aside>
 
-      {/* Mobile top bar — hidden on desktop */}
+      {/* Mobile top bar */}
       <header className="md:hidden flex h-14 flex-shrink-0 items-center justify-between bg-primary px-4">
-        <Link href="/dashboard" className="text-base font-bold text-white">
+        <Link href="/dashboard" className="flex items-center gap-2 text-base font-bold text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 text-xs">
+            🥑
+          </span>
           Jami
         </Link>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="rounded-md p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
           aria-label={t("openMenu")}
         >
           <Menu className="h-5 w-5" />
         </button>
       </header>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer overlay */}
       {open && (
         <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
+            className={`absolute inset-0 bg-black/50 backdrop-blur-sm ${
+              closing ? "animate-fade-in opacity-0" : "animate-fade-backdrop"
+            }`}
+            style={closing ? { animation: "fade-backdrop 0.2s ease-in reverse both" } : undefined}
+            onClick={close}
           />
           {/* Panel */}
-          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col bg-primary shadow-2xl">
+          <aside
+            className={`absolute inset-y-0 left-0 flex w-72 flex-col bg-primary shadow-2xl ${
+              closing ? "animate-slide-out-left" : "animate-slide-in-left"
+            }`}
+          >
             <div className="flex h-14 items-center justify-between border-b border-white/10 px-5">
-              <span className="text-base font-bold text-white">Jami</span>
+              <span className="flex items-center gap-2 text-base font-bold text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 text-xs">
+                  🥑
+                </span>
+                Jami
+              </span>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-md p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                onClick={close}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                 aria-label={t("closeMenu")}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <NavLinks items={navItems} onNavigate={() => setOpen(false)} />
+            <NavLinks items={navItems} onNavigate={close} />
             <Footer />
           </aside>
         </div>
