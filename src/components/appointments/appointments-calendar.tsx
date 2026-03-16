@@ -43,6 +43,12 @@ type RbcEvent = {
   resource: ViewAppointment;
 };
 
+const STATUS_COLORS: Record<AppointmentStatus, string> = {
+  COMPLETED: "#16a34a",
+  CANCELLED: "#ef4444",
+  BOOKED: "#3b82f6",
+};
+
 function AppointmentEvent({ event }: { event: RbcEvent }) {
   const { resource } = event;
   const nutritionPlanName = resource.participants[0]?.nutritionPlanName ?? null;
@@ -52,7 +58,7 @@ function AppointmentEvent({ event }: { event: RbcEvent }) {
         {resource.participants.map((p) => (
           <span
             key={p.patientId}
-            className="h-2 w-2 shrink-0 rounded-full"
+            className="h-2 w-2 shrink-0 rounded-full ring-1 ring-white/50"
             style={{ backgroundColor: p.color ?? "#cbd5e1" }}
           />
         ))}
@@ -119,8 +125,8 @@ export function AppointmentsCalendar({
   );
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
-      <div className="h-[420px] [&_.rbc-toolbar]:hidden">
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm animate-fade-in">
+      <div className="h-[320px] sm:h-[420px] md:h-[480px] [&_.rbc-toolbar]:hidden p-2 sm:p-3">
         <Calendar
           localizer={localizer}
           events={events}
@@ -132,14 +138,9 @@ export function AppointmentsCalendar({
           onSelectEvent={(event) => router.push(`/appointments/${event.id}`)}
           eventPropGetter={(event) => ({
             style: {
-              backgroundColor:
-                event.resource.status === AppointmentStatus.COMPLETED
-                  ? "#22c55e"
-                  : event.resource.status === AppointmentStatus.CANCELLED
-                    ? "#f87171"
-                    : "#3b82f6",
+              backgroundColor: STATUS_COLORS[event.resource.status],
               border: "none",
-              borderRadius: "4px",
+              borderRadius: "6px",
             },
           })}
         />
