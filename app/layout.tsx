@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
+import { RegisterSW } from "@/components/pwa/register-sw";
 
 import "./globals.css";
 
@@ -18,6 +19,12 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Jami Clinic SoR",
   description: "System of record for nutrition care",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Jami Clinic",
+  },
 };
 
 export default async function RootLayout({
@@ -31,9 +38,14 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang={locale} className={jakarta.variable}>
+        <head>
+          <meta name="theme-color" content="#16a34a" />
+          <link rel="apple-touch-icon" href="/icon-192.png" />
+        </head>
         <body className="antialiased">
           <NextIntlClientProvider messages={messages}>
             <AppShell>{children}</AppShell>
+            <RegisterSW />
             <SpeedInsights />
             <Analytics />
           </NextIntlClientProvider>

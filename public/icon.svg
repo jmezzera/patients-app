@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#16a34a"/>
+  <!-- Avocado body -->
+  <ellipse cx="256" cy="270" rx="120" ry="155" fill="#a3c44a"/>
+  <ellipse cx="256" cy="270" rx="105" ry="140" fill="#d4e87c"/>
+  <!-- Avocado pit -->
+  <circle cx="256" cy="300" r="55" fill="#8B5E3C"/>
+  <circle cx="242" cy="286" r="16" fill="#a3724e" opacity="0.6"/>
+  <!-- Stem -->
+  <path d="M256 115 Q260 90 270 80 Q256 85 256 115Z" fill="#5a7c1e"/>
+</svg>
