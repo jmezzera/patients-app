@@ -15,6 +15,7 @@ import { PatientAppointmentsPanel } from "@/components/appointments/patient-appo
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageShell } from "@/components/layout/page-shell";
+import { FoodGallery, type FoodImage } from "@/components/food/food-gallery";
 import { pivotMeasurements, type AppointmentMarker, type RawMeasurement } from "@/lib/chart-utils";
 import type { MeasurementRowData } from "@/components/metrics/measurement-table-client";
 
@@ -233,6 +234,28 @@ export default async function PatientDetailPage({ params }: Props) {
     />
   );
 
+  const foodImages: FoodImage[] = patient.uploadedAssets
+    .filter((a) => a.kind === "food")
+    .map((a) => ({
+      id: a.id,
+      fileUrl: a.fileUrl,
+      fileName: a.fileName,
+      createdAt: a.createdAt.toISOString(),
+    }));
+
+  const tf = await getTranslations("food");
+
+  const foodDiaryTab = (
+    <Card>
+      <CardHeader>
+        <CardTitle>{tf("title")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <FoodGallery images={foodImages} />
+      </CardContent>
+    </Card>
+  );
+
   return (
     <PageShell>
       <div className="flex items-center justify-between gap-3">
@@ -256,10 +279,12 @@ export default async function PatientDetailPage({ params }: Props) {
         profileTab={profileTab}
         appointmentsTab={appointmentsTab}
         metricsTab={metricsTab}
+        foodDiaryTab={foodDiaryTab}
         labels={{
           profile: t("tabs.profile"),
           appointments: t("tabs.appointments"),
           metrics: t("tabs.metrics"),
+          foodDiary: tf("title"),
         }}
       />
     </PageShell>

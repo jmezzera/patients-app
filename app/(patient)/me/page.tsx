@@ -7,6 +7,8 @@ import { getPatientProfile } from "@/lib/repos/patients";
 import { getWeeklySchedule } from "@/lib/repos/availability";
 import { ProfileCard } from "@/components/patient/profile-card";
 import { SchedulePreferenceForm } from "@/components/patient/schedule-preference-form";
+import { FoodGallery, type FoodImage } from "@/components/food/food-gallery";
+import { FoodImageUploader } from "@/components/food/food-image-uploader";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -52,6 +54,15 @@ export default async function MyProfilePage() {
     .filter((a) => a.status !== AppointmentStatus.CANCELLED);
 
   const publicNotes = patient.notes.filter((n) => n.isPublic);
+
+  const foodImages: FoodImage[] = patient.uploadedAssets
+    .filter((a) => a.kind === "food")
+    .map((a) => ({
+      id: a.id,
+      fileUrl: a.fileUrl,
+      fileName: a.fileName,
+      createdAt: a.createdAt.toISOString(),
+    }));
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
@@ -116,6 +127,16 @@ export default async function MyProfilePage() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("foodDiary")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FoodImageUploader patientId={actor.patientId} />
+          <FoodGallery images={foodImages} />
+        </CardContent>
+      </Card>
 
       <p className="text-sm text-muted-foreground">
         <Link href="/trends" className="underline">
