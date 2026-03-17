@@ -241,6 +241,12 @@ export default async function PatientDetailPage({ params }: Props) {
       fileUrl: a.fileUrl,
       fileName: a.fileName,
       createdAt: a.createdAt.toISOString(),
+      comments: a.comments.map((c) => ({
+        id: c.id,
+        content: c.content,
+        createdAt: c.createdAt.toISOString(),
+        author: { id: c.author.id, displayName: c.author.displayName, role: c.author.role },
+      })),
     }));
 
   const tf = await getTranslations("food");

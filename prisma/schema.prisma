@@ -79,6 +79,7 @@ model User {
   calendarBlocks   CalendarBlock[]
   audits           AuditEvent[]
   conversations    Conversation[]
+  assetComments    AssetComment[]
 
   @@index([orgId, role])
 }
@@ -226,8 +227,23 @@ model UploadedAsset {
 
   patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
   appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  comments    AssetComment[]
 
   @@index([orgId, patientId, kind])
+}
+
+model AssetComment {
+  id        String   @id @default(cuid())
+  orgId     String
+  assetId   String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  asset  UploadedAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  author User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([assetId, createdAt])
 }
 
 // ─── Doctor availability ───────────────────────────────────────────────────────
