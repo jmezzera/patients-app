@@ -45,7 +45,16 @@ export async function getPatientProfile(actor: SessionActor, patientId: string) 
         orderBy: { appointment: { scheduledAt: "desc" } },
         take: 30,
       },
-      uploadedAssets: { orderBy: { createdAt: "desc" }, take: 30 },
+      uploadedAssets: {
+        include: {
+          comments: {
+            include: { author: { select: { id: true, displayName: true, role: true } } },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 30,
+      },
       notes:
         actor.role === Role.PATIENT
           ? { where: { isPublic: true }, orderBy: { createdAt: "desc" }, take: 20 }

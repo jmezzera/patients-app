@@ -376,6 +376,10 @@
   "food": {
     "title": "Diario alimenticio",
     "noImages": "Sin fotos de comida todavía.",
+    "comments": {
+      "noComments": "Sin comentarios todavía. ¡Sé el primero en comentar!",
+      "placeholder": "Agregar un comentario..."
+    },
     "upload": {
       "dropOrBrowse": "Arrastra una foto de comida aquí o busca",
       "hint": "Solo imágenes, máx. 8MB",

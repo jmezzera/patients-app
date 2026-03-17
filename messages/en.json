@@ -376,6 +376,10 @@
   "food": {
     "title": "Food diary",
     "noImages": "No food images yet.",
+    "comments": {
+      "noComments": "No comments yet. Be the first to comment!",
+      "placeholder": "Add a comment..."
+    },
     "upload": {
       "dropOrBrowse": "Drop a food photo here or browse",
       "hint": "Images only, max 8MB",
